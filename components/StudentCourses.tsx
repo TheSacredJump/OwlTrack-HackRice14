@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FaFileUpload } from 'react-icons/fa';
 
 const StudentCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [gpa, setGpa] = useState(null);
+  const [creditProgress, setCreditProgress] = useState(0);
+
+  const TOTAL_CREDITS_REQUIRED = 120;
+
+  useEffect(() => {
+    if (courses.length > 0) {
+      calculateGPA();
+      calculateCreditProgress();
+    }
+  }, [courses]);
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -34,13 +46,43 @@ const StudentCourses = () => {
     }
   };
 
+  const calculateGPA = () => {
+    let totalPoints = 0;
+    let totalCredits = 0;
+
+    const gradePoints = {
+      'A': 4.0, 'A-': 3.7,
+      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+      'D+': 1.3, 'D': 1.0, 'D-': 0.7,
+      'F': 0.0
+    };
+
+    courses.forEach(course => {
+      if (course.grade in gradePoints) {
+        totalPoints += gradePoints[course.grade] * parseFloat(course.hours);
+        totalCredits += parseFloat(course.hours);
+      }
+    });
+
+    const calculatedGPA = totalCredits > 0 ? totalPoints / totalCredits : 0;
+    setGpa(calculatedGPA.toFixed(2));
+  };
+
+  const calculateCreditProgress = () => {
+    const totalCredits = courses.reduce((sum, course) => sum + parseFloat(course.hours), 0);
+    const progress = (totalCredits / TOTAL_CREDITS_REQUIRED) * 100;
+    setCreditProgress(Math.min(progress, 100));
+  };
+
   return (
     <div className="p-4 bg-navy h-full overflow-auto">
       <h2 className="text-2xl font-bold mb-4">Your Courses</h2>
       
       <div className="mb-4">
-        <label htmlFor="transcript-upload" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
-          Upload Transcript
+        <label htmlFor="transcript-upload" className="flex flex-row items-center space-x-2 w-fit bg-gradient-to-r from-pink-500 to-indigo-500 text-white font-bold py-2 px-4 rounded cursor-pointer">
+          <FaFileUpload />
+          <p>Upload Transcript</p>
         </label>
         <input
           id="transcript-upload"
@@ -53,6 +95,25 @@ const StudentCourses = () => {
 
       {loading && <div>Processing transcript...</div>}
       {error && <div className="text-red-500">Error: {error}</div>}
+
+      {gpa !== null && (
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold">Overall GPA: {gpa}</h3>
+        </div>
+      )}
+
+      {creditProgress > 0 && (
+        <div className="mb-4 w-[90%]">
+          <h3 className="text-xl font-semibold mb-2">Progress to Graduation</h3>
+          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+            <div 
+              className="bg-gradient-to-r from-owl to-emerald-500 h-2.5 rounded-full" 
+              style={{width: `${creditProgress}%`}}
+            ></div>
+          </div>
+          <p className="mt-2">{creditProgress.toFixed(1)}% complete ({Math.round(creditProgress * TOTAL_CREDITS_REQUIRED / 100)} / {TOTAL_CREDITS_REQUIRED} credits)</p>
+        </div>
+      )}
 
       {courses.length > 0 ? (
         <div>
