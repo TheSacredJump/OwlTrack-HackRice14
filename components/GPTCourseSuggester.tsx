@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaPaperPlane, FaSpinner } from 'react-icons/fa';
 
-const GPTCareerAdvisor = () => {
+const GPTCourseSuggester = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +22,7 @@ const GPTCareerAdvisor = () => {
 
     try {
       // Replace this with your actual API call to the GPT model
-      const response = await fetch('/api/gpt-career-advisor', {
+      const response = await fetch('/api/gpt-course-suggester', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),
@@ -45,7 +45,7 @@ const GPTCareerAdvisor = () => {
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-navy rounded-lg overflow-hidden">
       <div className="bg-modal border-b border-outline/50 p-4">
-        <h2 className="text-2xl font-bold text-milk">Career and Academic Advisor</h2>
+        <h2 className="text-2xl font-bold text-milk">AI Course Suggester and Academic/Career Chatbot</h2>
       </div>
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
@@ -63,7 +63,7 @@ const GPTCareerAdvisor = () => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about career paths or academic resources..."
+            placeholder="Ask about future course reccomendations or any academic/career question you have..."
             className="flex-grow p-2 rounded-lg bg-highlight border border-outline/50 text-milk focus:outline-none focus:ring-2 focus:ring-highlight"
           />
           <button 
@@ -79,4 +79,4 @@ const GPTCareerAdvisor = () => {
   );
 };
 
-export default GPTCareerAdvisor;
+export default GPTCourseSuggester;

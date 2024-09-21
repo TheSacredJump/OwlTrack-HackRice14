@@ -16,6 +16,7 @@ import { UserButton, useUser } from "@clerk/nextjs";
 import CourseCalendar from "@/components/CourseCalendar";
 import StudentCourses from "@/components/StudentCourses";
 import GPTCareerAdvisor from "@/components/GPTCareerAdvisor";
+import GPTCourseSuggester from "@/components/GPTCourseSuggester";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -33,7 +34,7 @@ export default function Dashboard() {
       icon: <IconCalendar className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Chatbot",
+      label: "Course Suggester and Chatbot",
       id: "chatbot",
       icon: <IconMessage className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
@@ -62,7 +63,7 @@ export default function Dashboard() {
       case "scheduler":
         return <CourseCalendar />;
       case "chatbot":
-        return <GPTCareerAdvisor />;
+        return <GPTCourseSuggester />;
       case "settings":
         return <div className="p-4 bg-navy h-screen">Settings Component</div>;
       case "logout":
