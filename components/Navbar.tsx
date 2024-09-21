@@ -48,7 +48,7 @@ const Navbar = () => {
             </Link>
           </div>
           <div className='hidden lg:flex space-x-4 font-ibm items-center'>
-            <Link href={`${isSignedIn ? '/dashboard' : '/sign-in'}`}>
+            <Link href={`${isSignedIn ? '/dashboard' : '/sign-up'}`}>
                 <div className="bg-button px-3 py-1 rounded text-milk font-medium hover:scale-105 hover:bg-owl hover:text-milk transition duration-300 tracking-tight" >
                 {<SignedIn>Dashboard</SignedIn>}  {<SignedOut>Sign Up / Login</SignedOut>}
                 </div>
