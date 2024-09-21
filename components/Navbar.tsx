@@ -38,10 +38,10 @@ const Navbar = () => {
             <Link href='/#features' className='hidden lg:flex'>
               <h1 className='text-subtext hover:scale-105 hover:bg-gray-200 rounded px-2 transition duration-300 hover:text-owl'>Features</h1>
             </Link>
-            <Link href='/faqs' className='hidden lg:flex'>
+            <Link href='/#faqs' className='hidden lg:flex'>
               <h1 className='text-subtext hover:scale-105 hover:bg-gray-200 rounded px-2 transition duration-300 hover:text-owl'>FAQs</h1>
             </Link>
-            <Link href='/contact' className='hidden lg:flex'>
+            <Link href='/#contact' className='hidden lg:flex'>
               <h1 className='text-subtext hover:scale-105 hover:bg-gray-200 rounded px-2 transition duration-300 hover:text-owl'>Contact</h1>
             </Link>
           </div>
