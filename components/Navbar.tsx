@@ -8,6 +8,8 @@ import { SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs';
 const Navbar = () => {
     const [hasScrolled, setHasScrolled] = useState(false)
     const { user, isSignedIn } = useUser();
+    console.log("USER", user)
+    
 
     useEffect(() => {
         const handleScroll = () => {

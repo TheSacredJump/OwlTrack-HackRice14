@@ -91,5 +91,10 @@ def update_four_year_plan():
 
     return jsonify({'message': 'Plan updated successfully'}), 200
 
+
+@app.route("/api/create_user")
+def create_user():
+    pass
+
 if __name__ == '__main__':
     app.run(debug=True)
