@@ -25,19 +25,61 @@ const CourseCalendar = () => {
     );
   }, [availableCourses, searchTerm]);
 
-  const addCourseToSchedule = (semesterIndex) => {
+  const addCourseToSchedule = async (semesterIndex) => {
+    const sem = ((semesterIndex + 1) % 2) == 0 ? 2 : 1;
+    const year = Math.ceil((semesterIndex + 1) / 2);
     if (selectedCourse) {
+      // Update the local state for the schedule
       setSchedule(prevSchedule => {
         const newSchedule = [...prevSchedule];
         newSchedule[semesterIndex] = [...newSchedule[semesterIndex], selectedCourse];
         return newSchedule;
       });
-      setAvailableCourses(prevCourses => 
+  
+      // Remove the selected course from the available courses
+      setAvailableCourses(prevCourses =>
         prevCourses.filter(course => course.id !== selectedCourse.id)
       );
+  
+      // Prepare the course data to send to the backend
+      const courseData = {
+        id: selectedCourse.id,
+        name: selectedCourse.name,
+        code: selectedCourse.code,
+        credits: selectedCourse.credits
+      };
+  
+      try {
+        const response = await fetch('http://127.0.0.1:5000//api/update_four_year_plan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          credentials: 'include',  // Include credentials if you're using sessions
+          body: JSON.stringify({
+            plan_id: "66eef6c9049650cc0a8c535a",  // Update with your actual plan ID
+            semester: `year_${year}_sem_${sem}`,  // Adjust the field name accordingly
+            course_data: courseData
+          }),
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
+        const data = await response.json();
+        console.log('Backend response:', data);
+      } catch (error) {
+        console.error('Error updating plan:', error);
+      }
+  
+      // Clear the selected course
       setSelectedCourse(null);
     }
   };
+  
+  
 
   const removeCourseFromSchedule = (semesterIndex, courseId) => {
     setSchedule(prevSchedule => {
