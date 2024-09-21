@@ -237,7 +237,7 @@ const SignUp = () => {
                             title="Let's Get Started" 
                             onClick={() => {
                                 setShowSuccessModal(false);
-                                router.push('/dashboard');
+                                router.push('/onboarding');
                             }}
                             className="w-full"
                         />
