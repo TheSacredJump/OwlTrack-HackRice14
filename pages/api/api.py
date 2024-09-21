@@ -6,7 +6,7 @@ from TranscriptParser import extract_courses_from_pdf
 from pymongo import MongoClient
 from bson import ObjectId  # Import ObjectId
 
-from pages.Services import initialize_services
+from pages.Services.initialize_services import initialize_services
 
 MONGO_URI = "mongodb+srv://sammy:HoustonRice@owltrack.sl1wi.mongodb.net/OwlTrack?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI)
@@ -24,8 +24,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 # Initialize services
 course_service, four_year_plan_service, major_service = initialize_services(mongo_db=db)
 
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/parse-transcript', methods=['POST'])
 def parse_transcript():

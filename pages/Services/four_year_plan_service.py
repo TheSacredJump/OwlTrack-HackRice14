@@ -5,11 +5,12 @@ from pages.Objects.four_year_plan import new_four_year_plan
 
 
 class FourYearPlanService:
-    def __init__(self, db, major_service):
+    def __init__(self, db, major_service, course_service):
         """
         Initialize the FourYearPlanService with a database connection.
         :param db: Instance of MongoDB.
         """
+        self.course_service = course_service
         self.db = db
         self.major_service = major_service
 
@@ -55,14 +56,24 @@ class FourYearPlanService:
                                       elective_reqs=elective_reqs)
         return self.db.insert_one("FourYearPlans", asdict(new_plan))
 
-    def check_pre_reqs(self, course: str, plan: dict, semester: str):
+    def check_pre_reqs(self, course_id: str, plan: dict, place_in: str):
         """
         Check if the prerequisites for a course are met in a four-year plan.
-        :param course: The course to check.
+        :param course_id: The course_id to check.
         :param plan: The four-year plan to check.
-        :param semester: The semester the course is being placed in.
+        :param place_in: The semester the course is being placed in.
         :return: True if prerequisites are met, else False.
         """
+        course = self.course_service.get_course(course_id=course_id)
+        assert course
+
+        prereqs = course["prereqs"]
+        assert prereqs
+
+        for semester in ["year_one_sem_one", "year_one_sem_two", "year_two_sem_one", "year_two_sem_two",
+                         "year_three_sem_one", "year_three_sem_two", "year_four_sem_one", "year_four_sem_two"]:
+            # if semester == nul
+            pass
         pass
 
     def find_position(self, plan: dict, course: str):
