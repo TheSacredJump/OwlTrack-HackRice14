@@ -5,7 +5,7 @@ class FourYearPlan:
     def __init__(self, name: str, major: str, unassigned: List[str], year_one_sem_one: List[str],
                  year_one_sem_two: List[str], year_two_sem_one: List[str], year_two_sem_two: List[str],
                  year_three_sem_one: List[str], year_three_sem_two: List[str], year_four_sem_one: List[str],
-                 year_four_sem_two: List[str], elective_reqs: Dict[str, str]):
+                 year_four_sem_two: List[str], elective_reqs: Dict[str, Dict]):
         self.name = name
         self.major = major
         self.unassigned = unassigned
