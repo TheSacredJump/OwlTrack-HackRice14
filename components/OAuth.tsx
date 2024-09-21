@@ -17,7 +17,7 @@ const OAuth = () => {
             await signIn.authenticateWithRedirect({
                 strategy: "oauth_google",
                 redirectUrl: "/sso-callback",
-                redirectUrlComplete: "/dashboard"
+                redirectUrlComplete: "/onboarding"
             });
         } catch (err) {
             console.error('OAuth error', err);
