@@ -5,6 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import CustomButton from '@/components/CustomButton';
 import InputField from '@/components/InputField';
+import axios from 'axios';
 
 const majors = [
     'Computer Science', 'Electrical Engineering', 'Mechanical Engineering',
@@ -22,11 +23,45 @@ const Onboarding = () => {
 
     const [major, setMajor] = useState('');
     const [standing, setStanding] = useState('');
-    const [transcript, setTranscript] = useState(null);
+    const [transcript, setTranscript] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [courses, setCourses] = useState([])
+
+    const handleFileUpload = async (event: any) => {
+        console.log(event)
+        const file = event.target.files[0];
+        if (!file) return;
+    
+        const formData = new FormData();
+        formData.append('transcript', file);
+    
+        setLoading(true);
+        setError("none");
+    
+        try {
+          const response = await fetch('/api/upload-transcript', {
+            method: 'POST',
+            body: formData,
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to upload transcript');
+          }
+    
+          const data = await response.json();
+          console.log(data)
+          setTranscript(true);
+          setCourses(data);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
 
     const handleSubmit = async (e) => {
+        console.log("Successfully Submitted Maybe!")
         e.preventDefault();
         setLoading(true);
         setError('');
@@ -36,22 +71,25 @@ const Onboarding = () => {
             setLoading(false);
             return;
         }
-
+        console.log(courses)
         const formData = new FormData();
         formData.append('major', major);
         formData.append('standing', standing);
-        formData.append('transcript', transcript);
+        formData.append('courses', JSON.stringify(courses));
         formData.append('clerkId', user?.id);
         formData.append('username', user?.username);
 
 
         try {
-            const response = await fetch('/api/onboarding', {
-                method: 'POST',
-                body: formData,
+            // Use Axios for POST request
+            const response = await axios.post('http://127.0.0.1:5000//api/create-user', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Accept' : "multipart/form-data"
+                },
             });
 
-            if (!response.ok) {
+            if (response.status !== 201) {
                 throw new Error('Failed to save onboarding information');
             }
 
@@ -111,7 +149,7 @@ const Onboarding = () => {
                             id="transcript"
                             name="transcript"
                             accept=".pdf"
-                            onChange={(e) => setTranscript(e.target.files[0])}
+                            onChange={handleFileUpload}
                             className="mt-1 block w-full text-sm text-milk
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded-full file:border-0
@@ -128,6 +166,7 @@ const Onboarding = () => {
                         type="submit"
                         title={loading ? "Saving..." : "Complete Onboarding"}
                         disabled={loading}
+                        onClick={(e) => handleSubmit(e)}
                         className="w-full bg-gradient-to-r from-pink-500 to-indigo-500"
                     />
                 </form>

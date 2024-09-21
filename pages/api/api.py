@@ -5,15 +5,14 @@ import os
 from TranscriptParser import extract_courses_from_pdf
 from pymongo import MongoClient
 from bson import ObjectId  # Import ObjectId
-
+import json
 from pages.Services.initialize_services import initialize_services
 
 MONGO_URI = "mongodb+srv://sammy:HoustonRice@owltrack.sl1wi.mongodb.net/OwlTrack?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI)
 db = client["OwlTrack"]
 app = Flask(__name__)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3001", "methods": ["POST", "OPTIONS"]}})
-
+CORS(app)  # This will allow all origins
 
 UPLOAD_FOLDER = 'tmp'
 ALLOWED_EXTENSIONS = {'pdf'}
@@ -92,9 +91,44 @@ def update_four_year_plan():
     return jsonify({'message': 'Plan updated successfully'}), 200
 
 
-@app.route("/api/create_user")
+@app.route("/api/create-user", methods=['POST'])
 def create_user():
-    pass
+    # Get the form data from the request
+    major = request.form.get('major')
+    username = request.form.get('username')
+    courses = request.form.get('courses')  # This is a JSON string now
+    clerk_id = request.form.get('clerkId')
+    standing = request.form.get('standing')
+
+    if not major or not username or not courses or not clerk_id or not standing:
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    # Parse courses back into a list of objects
+    try:
+        courses = json.loads(courses)
+    except json.JSONDecodeError:
+        return jsonify({'message': 'Invalid courses data'}), 400
+
+    # Create a new user document
+    collection = db["Users"]
+
+    user = {
+        '_id': clerk_id,  # Use clerk_id as the _id
+        'username': username,
+        'standing': standing,
+        'courses': courses,  # Store courses as an array of objects
+        'major': major
+    }
+
+    try:
+        # Insert the new user into the MongoDB Users collection
+        result = collection.insert_one(user)
+        return jsonify({'message': 'User created successfully'}), 201
+    except Exception as e:
+        return jsonify({'message': 'User creation failed', 'error': str(e)}), 400
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
