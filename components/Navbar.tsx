@@ -35,7 +35,7 @@ const Navbar = () => {
                 <Image src={'/owltrack_logo.png'} alt='logo' width={50} height={50} className='w-8 h-8' />
                 <h1 className='text-milk text-2xl hidden md:flex'>OwlTrack</h1>
             </Link>
-            <Link href='/features' className='hidden lg:flex'>
+            <Link href='/#features' className='hidden lg:flex'>
               <h1 className='text-subtext hover:scale-105 hover:bg-gray-200 rounded px-2 transition duration-300 hover:text-owl'>Features</h1>
             </Link>
             <Link href='/faqs' className='hidden lg:flex'>

@@ -44,7 +44,15 @@ const CourseCalendar = () => {
       const newSchedule = [...prevSchedule];
       const removedCourse = newSchedule[semesterIndex].find(course => course.id === courseId);
       newSchedule[semesterIndex] = newSchedule[semesterIndex].filter(course => course.id !== courseId);
-      setAvailableCourses(prevCourses => [...prevCourses, removedCourse]);
+      
+      setAvailableCourses(prevCourses => {
+        // Check if the course already exists in availableCourses
+        if (!prevCourses.some(course => course.id === removedCourse.id)) {
+          return [...prevCourses, removedCourse];
+        }
+        return prevCourses;
+      });
+      
       return newSchedule;
     });
   };
