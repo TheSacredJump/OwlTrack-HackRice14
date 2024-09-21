@@ -35,7 +35,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} ${ibm.className} bg-navy antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} ${ibm.className} bg-navy text-milk antialiased`}
         >
           {children}
         </body>
