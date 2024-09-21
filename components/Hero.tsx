@@ -6,9 +6,9 @@ import { LampContainer } from "../components/ui/lamp";
 
 const Hero = () => {
   return (
-    <div className='flex justify-center items-center w-full h-full md:h-screen font-ibm'>
-      <LampContainer>
-        <div className='flex flex-col gap-8 mx-auto'>
+    <div className='flex justify-center items-center w-full h-screen md:h-screen font-ibm'>
+      <LampContainer className='border-2'>
+        <div className='flex flex-col mx-auto'>
             <motion.h1 
               initial={{ opacity: 0.5, y: 100 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -30,7 +30,7 @@ const Hero = () => {
                 duration: 0.8,
                 ease: "easeInOut",
               }}
-              className='text-center text-subtext font-medium text-lg'
+              className='mt-8 text-center text-subtext font-medium text-lg'
             >
               OwlTrack builds your four-year plan, suggests courses, and provides 
               <br /> data-driven course analytics to ensure your future success.
@@ -44,10 +44,22 @@ const Hero = () => {
                 ease: "easeInOut",
               }}
               onClick={() => {}} 
-              className='mt-10 bg-owl w-64 mx-auto shadow-md shadow-owl hover:shadow-milk px-5 py-3 rounded-lg text-milk text-medium text-xl hover:scale-105 hover:bg-milk hover:text-owl transition duration-500'
+              className='mt-10 bg-owl w-64 mx-auto shadow-md shadow-owl hover:shadow-blue-600 px-5 py-3 rounded-lg text-milk text-medium text-xl hover:bg-blue-600'
             >
               Get Started
             </motion.button>
+            <motion.div 
+              initial={{ opacity: 0.5, y: 100 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: 0.3,
+                duration: 0.8,
+                ease: "easeInOut",
+              }}
+              className='text-subtext text-center mt-2 text-sm'
+            >
+              No credit card required.
+            </motion.div>
         </div>
       </LampContainer>
     </div>

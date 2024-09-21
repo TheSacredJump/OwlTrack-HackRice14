@@ -25,6 +25,8 @@ const config = {
         modal: '#040b1c',
         milk: '#F9FAFC',
         subtext: '#788195',
+        outline: '#1f2939',
+        highlight: '#0c2247',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
