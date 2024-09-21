@@ -91,7 +91,7 @@ const CourseCalendar = () => {
           <div className='grid grid-cols-2'>
           {schedule.map((semester, index) => (
             <div key={index} className="mb-4">
-              <h3 className="font-semibold">Year {Math.floor(index / 2) + 1}, Semester {(index % 2) + 1}</h3>
+              <h3 className="font-semibold">Year {Math.floor(index / 2) + 1}, {(index % 2) == 0 ? 'Fall' : 'Spring'} Semester</h3>
               <div className="flex flex-wrap gap-2 mt-2 px-4">
                 {semester.map(course => (
                   <div key={course.id} className="bg-navy border border-outline p-2 rounded flex items-center">
