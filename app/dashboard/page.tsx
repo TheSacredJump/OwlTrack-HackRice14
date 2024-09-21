@@ -55,7 +55,7 @@ export default function Dashboard() {
       case "scheduler":
         return <CourseCalendar />;
       case "settings":
-        return <div>Settings Component</div>;
+        return <div className="p-4 bg-navy h-screen">Settings Component</div>;
       case "logout":
         // Handle logout logic here
         return null;

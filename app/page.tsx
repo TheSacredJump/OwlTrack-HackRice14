@@ -1,3 +1,4 @@
+import FAQs from "@/components/FAQs";
 import Features from "@/components/Features";
 import Hero from "@/components/Hero";
 import Macbook from "@/components/Macbook";
@@ -10,6 +11,7 @@ export default function Home() {
     <Hero />
     <Features />
     <Macbook />
+    <FAQs />
     </>
   );
 }
