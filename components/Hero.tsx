@@ -7,7 +7,7 @@ import { LampContainer } from "../components/ui/lamp";
 const Hero = () => {
   return (
     <div className='flex justify-center items-center w-full h-screen md:h-screen font-ibm'>
-      <LampContainer className='border-2'>
+      <LampContainer>
         <div className='flex flex-col mx-auto'>
             <motion.h1 
               initial={{ opacity: 0.5, y: 100 }}
