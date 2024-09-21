@@ -118,6 +118,26 @@ def create_user():
     except Exception as e:
         return jsonify({'message': 'User creation failed', 'error': str(e)}), 400
 
+@app.route('/api/get-user-courses', methods=['GET'])
+def get_user_courses():
+    clerk_id = request.headers.get('X-Clerk-User-Id')
+    if not clerk_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    try:
+        collection = db["Users"]
+        user = collection.find_one({"_id": clerk_id})
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        return jsonify({
+            'courses': user.get('courses', []),
+            'major': user.get('major', ''),
+            'standing': user.get('standing', '')
+        }), 200
+    except Exception as e:
+        return jsonify({'error': f'Error fetching user courses: {str(e)}'}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
