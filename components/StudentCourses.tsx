@@ -51,7 +51,7 @@ const StudentCourses = () => {
     let totalCredits = 0;
 
     const gradePoints = {
-      'A': 4.0, 'A-': 3.7,
+      'A+': 4.0, 'A': 4.0, 'A-': 3.7,
       'B+': 3.3, 'B': 3.0, 'B-': 2.7,
       'C+': 2.3, 'C': 2.0, 'C-': 1.7,
       'D+': 1.3, 'D': 1.0, 'D-': 0.7,
@@ -59,7 +59,7 @@ const StudentCourses = () => {
     };
 
     courses.forEach(course => {
-      if (course.grade in gradePoints) {
+      if (course.status === 'completed' && course.grade in gradePoints) {
         totalPoints += gradePoints[course.grade] * parseFloat(course.hours);
         totalCredits += parseFloat(course.hours);
       }
@@ -70,7 +70,15 @@ const StudentCourses = () => {
   };
 
   const calculateCreditProgress = () => {
-    const totalCredits = courses.reduce((sum, course) => sum + parseFloat(course.hours), 0);
+    const completedCredits = courses
+      .filter(course => course.status === 'completed')
+      .reduce((sum, course) => sum + parseFloat(course.hours), 0);
+    
+    const inProgressCredits = courses
+      .filter(course => course.status === 'in_progress')
+      .reduce((sum, course) => sum + parseFloat(course.hours), 0);
+
+    const totalCredits = completedCredits + inProgressCredits;
     const progress = (totalCredits / TOTAL_CREDITS_REQUIRED) * 100;
     setCreditProgress(Math.min(progress, 100));
   };
@@ -103,11 +111,11 @@ const StudentCourses = () => {
       )}
 
       {creditProgress > 0 && (
-        <div className="mb-4 w-[90%]">
+        <div className="mb-4">
           <h3 className="text-xl font-semibold mb-2">Progress to Graduation</h3>
           <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
             <div 
-              className="bg-gradient-to-r from-owl to-emerald-500 h-2.5 rounded-full" 
+              className="bg-gradient-to-r from-pink-500 to-indigo-500 h-2.5 rounded-full" 
               style={{width: `${creditProgress}%`}}
             ></div>
           </div>
@@ -115,9 +123,10 @@ const StudentCourses = () => {
         </div>
       )}
 
-      {courses.length > 0 ? (
+      {courses.length > 0 && (
         <div>
-          {courses.map((course, index) => (
+          <h3 className="text-xl font-semibold mb-2">Completed Courses</h3>
+          {courses.filter(course => course.status === 'completed').map((course, index) => (
             <div key={index} className="mb-4 p-4 bg-modal rounded-lg">
               <h3 className="text-lg font-semibold">{course.name}</h3>
               <p>Code: {course.code}</p>
@@ -126,8 +135,21 @@ const StudentCourses = () => {
               <p>Semester: {course.semester}</p>
             </div>
           ))}
+
+          <h3 className="text-xl font-semibold mb-2 mt-6">Current Courses</h3>
+          {courses.filter(course => course.status === 'in_progress').map((course, index) => (
+            <div key={index} className="mb-4 p-4 bg-modal rounded-lg border-2 border-indigo-500">
+              <h3 className="text-lg font-semibold">{course.name}</h3>
+              <p>Code: {course.code}</p>
+              <p>Credit Hours: {course.hours}</p>
+              <p>Status: In Progress</p>
+              <p>Semester: {course.semester}</p>
+            </div>
+          ))}
         </div>
-      ) : (
+      )}
+
+      {courses.length === 0 && (
         <div>No courses to display. Please upload your transcript.</div>
       )}
     </div>
