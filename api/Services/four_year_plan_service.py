@@ -1,9 +1,7 @@
-import abc
-
 
 class FourYearPlanService:
-    def __init__(self):
-        pass
+    def __init__(self, db):
+        self.db = db
 
     def get_four_year_plan(self, uqid: str):
         pass

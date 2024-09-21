@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from pymongo.errors import ConnectionError, OperationFailure
+from pymongo.errors import OperationFailure
 
 class MongoDB:
     def __init__(self, uri, db_name):
@@ -20,8 +20,10 @@ class MongoDB:
             self.client = MongoClient(self.uri)
             self.db = self.client[self.db_name]
             print(f"Connected to database: {self.db_name}")
-        except (ConnectionError, OperationFailure) as e:
+        except ConnectionError as e:
             print(f"Error connecting to MongoDB: {e}")
+        except OperationFailure as e:
+            print(f"Operation failed: {e}")
 
     def insert_one(self, collection_name, document):
         """Insert a single document into a collection."""
@@ -87,36 +89,3 @@ class MongoDB:
         if self.client:
             self.client.close()
             print("Connection closed.")
-
-
-# Usage Example
-if __name__ == "__main__":
-    # MongoDB connection string and database name
-    uri = "mongodb+srv://<username>:<password>@cluster0.mongodb.net/?retryWrites=true&w=majority"
-    db_name = "test"
-
-    # Initialize MongoDB instance
-    mongo_db = MongoDB(uri, db_name)
-
-    # Example document to insert
-    new_recipe = {
-        "title": "Spaghetti Carbonara",
-        "ingredients": ["spaghetti", "eggs", "bacon", "parmesan"],
-        "time": "30m"
-    }
-
-    # Insert the document
-    mongo_db.insert_one("recipes", new_recipe)
-
-    # Query documents from the 'recipes' collection
-    recipes = mongo_db.find("recipes")
-    print("Recipes in database:", recipes)
-
-    # Update a document
-    mongo_db.update_one("recipes", {"title": "Spaghetti Carbonara"}, {"time": "25m"})
-
-    # Delete a document
-    mongo_db.delete_one("recipes", {"title": "Spaghetti Carbonara"})
-
-    # Close the connection
-    mongo_db.close()
