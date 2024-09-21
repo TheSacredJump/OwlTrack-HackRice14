@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { UserButton, useUser } from "@clerk/nextjs";
+import CourseCalendar from "@/components/CourseCalendar";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -77,7 +78,7 @@ export default function Dashboard() {
           </div>
         </SidebarBody>
       </Sidebar>
-      <Content />
+      <CourseCalendar />
     </div>
   );
 }
