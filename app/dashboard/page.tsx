@@ -5,7 +5,7 @@ import {
   IconArrowLeft,
   IconBrandTabler,
   IconSettings,
-  IconUserBolt,
+  IconCalendar,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -16,52 +16,66 @@ import CourseCalendar from "@/components/CourseCalendar";
 
 export default function Dashboard() {
   const { user } = useUser();
+  const [currentView, setCurrentView] = useState("dashboard");
 
   const links = [
     {
       label: "Dashboard",
-      href: "#",
-      icon: (
-        <IconBrandTabler className="text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      id: "dashboard",
+      icon: <IconBrandTabler className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Profile",
-      href: "#",
-      icon: (
-        <IconUserBolt className="text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      label: "Scheduler",
+      id: "scheduler",
+      icon: <IconCalendar className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
       label: "Settings",
-      href: "#",
-      icon: (
-        <IconSettings className="text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      id: "settings",
+      icon: <IconSettings className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
       label: "Logout",
-      href: "#",
-      icon: (
-        <IconArrowLeft className="text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
+      id: "logout",
+      icon: <IconArrowLeft className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
   ];
+
   const [open, setOpen] = useState(false);
+
+  const handleLinkClick = (id) => {
+    setCurrentView(id);
+  };
+
+  const renderContent = () => {
+    switch (currentView) {
+      case "dashboard":
+        return <Content />;
+      case "scheduler":
+        return <CourseCalendar />;
+      case "settings":
+        return <div>Settings Component</div>;
+      case "logout":
+        // Handle logout logic here
+        return null;
+      default:
+        return <Content />;
+    }
+  };
+
   return (
-    <div
-      className={cn(
-        "rounded-md flex flex-col md:flex-row bg-neutral-800 w-full flex-1 mx-auto border  border-neutral-700 overflow-hidden",
-        "h-screen" // for your use case, use `h-screen` instead of `h-[60vh]`
-      )}
-    >
+    <div className="rounded-md flex flex-col md:flex-row bg-neutral-800 w-full flex-1 mx-auto border border-neutral-700 overflow-hidden h-screen">
       <Sidebar open={open} setOpen={setOpen}>
         <SidebarBody className="justify-between gap-10">
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2">
               {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
+                <SidebarLink 
+                  key={idx} 
+                  link={{...link, href: "#"}}  // Set href to "#" to prevent navigation
+                  onClick={() => handleLinkClick(link.id)}
+                />
               ))}
             </div>
           </div>
@@ -70,15 +84,15 @@ export default function Dashboard() {
               link={{
                 label: `${user?.firstName} ${user?.lastName}`,
                 href: "#",
-                icon: (
-                  <UserButton />
-                ),
+                icon: <UserButton />,
               }}
             />
           </div>
         </SidebarBody>
       </Sidebar>
-      <CourseCalendar />
+      <div className="flex-1 overflow-auto">
+        {renderContent()}
+      </div>
     </div>
   );
 }

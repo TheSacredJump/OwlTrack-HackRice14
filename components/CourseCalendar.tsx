@@ -58,7 +58,7 @@ const CourseCalendar = () => {
   };
 
   return (
-    <div className="p-4 w-full bg-navy overflow-auto">
+    <div className="p-4 w-full bg-navy overflow-auto h-screen">
       <h1 className="text-2xl font-bold mb-4">Course Calendar</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-modal border border-outline p-4 rounded shadow">
