@@ -1,7 +1,10 @@
 # main.py
+import atexit
+
 from api.MongoDB.mongodb import MongoDB
 from api.Services.course_service import CourseService
 from api.Services.four_year_plan_service import FourYearPlanService
+from api.Services.major_service import MajorService
 
 
 def initialize_services():
@@ -14,19 +17,21 @@ def initialize_services():
     # Initialize MongoDB instance
     mongo_db = MongoDB(uri, db_name)
 
+    # Register the close function to be called when the program ends
+    atexit.register(mongo_db.close)
+
     # Initialize services
     course_service = CourseService(mongo_db)
-    four_year_plan_service = FourYearPlanService(mongo_db)
+    major_service = MajorService(mongo_db)
+    four_year_plan_service = FourYearPlanService(mongo_db, major_service)
 
-    return course_service, four_year_plan_service, mongo_db
+
+    return course_service, four_year_plan_service, major_service, mongo_db
 
 def main():
     """Main function to initialize services and perform operations."""
     # Initialize services
-    course_service, four_year_plan_service, mongo_db = initialize_services()
-
-    # Close the MongoDB connection
-    mongo_db.close()
+    course_service, four_year_plan_service, major_service, mongo_db = initialize_services()
 
 if __name__ == "__main__":
     main()
