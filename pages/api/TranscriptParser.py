@@ -1,6 +1,7 @@
 import re
 import PyPDF2
 import json
+
 def extract_courses_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
         reader = PyPDF2.PdfReader(file)
@@ -34,32 +35,22 @@ def extract_courses_from_pdf(pdf_path):
 
     offset = 0
     semester = "Y1S1"
-    for sem in range(1, len(sems)):
-        if sem == 1 or sem == 2:
-            if sem == 2:
-                semester = f"Y1S2"
-            else:
-                semester = f"Y1S1"
-        if sem == 3 or sem == 4:
-            if sem == 4:
-                semester = f"Y2S2"
-            else:
-                semester = f"Y2S1"
-        if sem == 5 or sem == 6:
-            if sem == 6:
-                semester = f"Y3S2"
-            else:
-                semester = f"Y3S1"
-        if sem == 7 or sem == 8:
-            if sem == 8:
-                semester = f"Y4S2"
-            else:
-                semester = f"Y4S1"
-        for course in range(0 + offset, sems.get(sem) + offset):
+    for sem in range(1, len(sems) + 1):  # Changed to include the last semester
+        if sem <= 2:
+            semester = f"Y1S{sem}"
+        elif sem <= 4:
+            semester = f"Y2S{sem - 2}"
+        elif sem <= 6:
+            semester = f"Y3S{sem - 4}"
+        elif sem <= 8:
+            semester = f"Y4S{sem - 6}"
+
+        for course in range(offset, offset + sems.get(sem, 0)):
             course_list[course]["semester"] = semester
-        offset += sems.get(sem)
+        offset += sems.get(sem, 0)
 
     return json.dumps(course_list, indent=4)
+
 def count_courses_per_semester(pdf_path):
     with open(pdf_path, 'rb') as file:
         reader = PyPDF2.PdfReader(file)
@@ -93,14 +84,4 @@ def count_courses_per_semester(pdf_path):
 
     return semester_course_count
 
-# Path to the PDF file
-pdf_path = "/Users/anthonytang/Documents/Anthony_Tang_Transcript.pdf"
-
-# Extract and print the courses in JSON format
-courses_json = extract_courses_from_pdf(pdf_path)
-sems = count_courses_per_semester(pdf_path)
-
-print(courses_json)
-
-
-
+# The main execution part is removed as it's not needed in the Flask context

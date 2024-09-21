@@ -13,6 +13,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { UserButton, useUser } from "@clerk/nextjs";
 import CourseCalendar from "@/components/CourseCalendar";
+import StudentCourses from "@/components/StudentCourses";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -50,7 +51,7 @@ export default function Dashboard() {
   const renderContent = () => {
     switch (currentView) {
       case "dashboard":
-        return <Content />;
+        return <StudentCourses />;
       case "scheduler":
         return <CourseCalendar />;
       case "settings":
