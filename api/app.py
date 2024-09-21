@@ -1,7 +1,7 @@
 # main.py
 import atexit
 
-from api.MongoDB.mongodb import MongoDB
+from pages.MongoDB import MongoDB
 from pages.Services.course_service import CourseService
 from pages.Services.four_year_plan_service import FourYearPlanService
 from pages.Services.major_service import MajorService

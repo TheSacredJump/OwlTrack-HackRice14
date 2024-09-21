@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
+from bson import ObjectId
 
 class MongoDB:
     def __init__(self, uri, db_name):
@@ -60,7 +61,7 @@ class MongoDB:
         :return: The result of the update operation.
         """
         try:
-            collection = self.db[collection_name]
+            collection = self.db[collection_name]  # Access the collection from the db
             result = collection.update_one(query, {"$set": update})
             print(f"Matched {result.matched_count} document(s) and modified {result.modified_count} document(s).")
             return result.modified_count
@@ -89,3 +90,12 @@ class MongoDB:
         if self.client:
             self.client.close()
             print("Connection closed.")
+
+    # New method to get a specific collection
+    def get_collection(self, collection_name):
+        """
+        Get a specific collection from the database.
+        :param collection_name: The name of the collection.
+        :return: The requested collection.
+        """
+        return self.db[collection_name]

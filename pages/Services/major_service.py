@@ -1,5 +1,4 @@
-# major_service.py
-
+from bson import ObjectId
 
 class MajorService:
     def __init__(self, db):
@@ -9,26 +8,34 @@ class MajorService:
         """
         self.db = db
 
-    def get_major(self, uqid: str):
+    def get_major(self, uqid):
         """
         Retrieve a major by its unique identifier (uqid).
-        :param uqid: The unique identifier of the course.
+        :param uqid: The unique identifier of the major (str or ObjectId).
         :return: The major document if found, else None.
         """
-        query = {"uqid": uqid}
-        resp = self.db.find("Majors", query)
-        if not resp:
-            return None
-        return resp[0]
+        if not isinstance(uqid, ObjectId):
+            try:
+                uqid = ObjectId(uqid)
+            except:
+                print(f"Invalid uqid format: {uqid}")
+                return None
+
+        query = {"_id": uqid}
+        # Access the 'Majors' collection
+        collection = self.db["Majors"]
+        return collection.find_one(query)
 
     def get_major_by_name(self, full_name: str):
         """
-        Retrieve a major by its unique identifier (uqid).
-        :param full_name: The unique identifier of the course.
+        Retrieve a major by its full name.
+        :param full_name: The full name of the major.
         :return: The major document if found, else None.
         """
         query = {"Full-Name": full_name}
-        resp = self.db.find("Majors", query)
-        if not resp:
-            return None
-        return resp[0]
+        collection = self.db["Majors"]
+
+        # Use find() but get the first document
+        result = collection.find(query)
+        return result[0] if result else None
+

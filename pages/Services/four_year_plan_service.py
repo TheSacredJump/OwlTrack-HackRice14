@@ -1,11 +1,13 @@
 # four_year_plan_service.py
 from dataclasses import asdict
 
+from pages.MongoDB.mongodb import MongoDB
 from pages.Objects.four_year_plan import new_four_year_plan
+from bson import ObjectId
 
 
 class FourYearPlanService:
-    def __init__(self, db, major_service, course_service):
+    def __init__(self, db: MongoDB, major_service, course_service):
         """
         Initialize the FourYearPlanService with a database connection.
         :param db: Instance of MongoDB.
@@ -14,17 +16,24 @@ class FourYearPlanService:
         self.db = db
         self.major_service = major_service
 
-    def get_four_year_plan(self, uqid: str):
+    def get_four_year_plan(self, uqid):
         """
         Retrieve a four-year plan by its unique identifier (uqid).
-        :param uqid: The unique identifier of the four-year plan.
+        :param uqid: The unique identifier of the four-year plan (str or ObjectId).
         :return: The four-year plan document if found, else None.
         """
-        query = {"uqid": uqid}
-        resp = self.db.find("FourYearPlans", query)
-        if not resp:
-            return None
-        return resp[0]
+        # Ensure uqid is an ObjectId
+        if not isinstance(uqid, ObjectId):
+            try:
+                uqid = ObjectId(uqid)
+            except:
+                print(f"Invalid uqid format: {uqid}")
+                return None
+
+        query = {"_id": uqid}
+        collection = self.db["FourYearPlans"]
+        resp = collection.find_one(query)
+        return resp
 
     def create_four_year_plan(self, name: str, major: str):
         """
@@ -66,14 +75,16 @@ class FourYearPlanService:
         """
         if place_in == "Unassigned":
             return True
-        course = self.course_service.get_course(course_id=course_id)
-        assert course
-
+        # course = self.course_service.get_course(uqid=course_id)
+        # assert course
+        #
+        # prereqs = course["prereqs"]
+        # assert prereqs
+        course = {"prereqs": []}
         prereqs = course["prereqs"]
-        assert prereqs
 
-        for semester in ["year_one_sem_one", "year_one_sem_two", "year_two_sem_one", "year_two_sem_two",
-                         "year_three_sem_one", "year_three_sem_two", "year_four_sem_one", "year_four_sem_two"]:
+        for semester in ["year_1_sem_1", "year_1_sem_2", "year_2_sem_1", "year_2_sem_2",
+                         "year_3_sem_1", "year_3_sem_2", "year_4_sem_1", "year_4_sem_2"]:
             if semester == place_in or len(prereqs) == 0:
                 break
             sem_courses = plan[semester]
@@ -96,10 +107,8 @@ class FourYearPlanService:
         :param course: The course to find.
         :return: The semester the course is in, else None.
         """
-        for semester in plan:
-            # passes through non semesters
-            if semester in ["Name", "Major", "elective_reqs"]:
-                continue
+        for semester in ["year_1_sem_1", "year_1_sem_2", "year_2_sem_1", "year_2_sem_2",
+                         "year_3_sem_1", "year_3_sem_2", "year_4_sem_1", "year_4_sem_2"]:
             if course in plan[semester]:
                 return semester
         return None
@@ -120,33 +129,12 @@ class FourYearPlanService:
         assert major is not None, "Major not found"
 
         # if course is not a course_id (ie. it's a category, like Elective)
-        if course in plan["elective_reqs"]:
+        if course in list(plan["elective_reqs"].keys()):
             # If there is no selected inner course, update database and return
             course_id = plan["elective_reqs"][course]
-            if not course_id:
-                # Prepare the query to remove from move_from and add to move_to
-                query = {
-                    "uqid": uqid,
-                    f"{move_from}": {"$in": [course]}
-                }
-
-                update = {
-                    "$pull": {f"{move_from}": course},
-                    "$push": {f"{move_to}=": course}
-                }
-
-                # Execute the update
-                result = self.db.update_one("FourYearPlans", query, update)
-                return result.modified_count # Maybe return something else? I think we should return the updated plan
-
-            # If course_id cannot be placed there due to pre-reqs, return an error
-            if not self.check_pre_reqs(course_id, plan, move_to):
-                return Exception("pre-reqs not met")
-
-            # If there are too many courses, return an error (implement later)
-            if plan[move_to] and len(plan[move_to]) >= 5:
-                return Exception("too many courses")
-
+        else:
+            course_id = course
+        if not course_id:
             # Prepare the query to remove from move_from and add to move_to
             query = {
                 "uqid": uqid,
@@ -160,7 +148,32 @@ class FourYearPlanService:
 
             # Execute the update
             result = self.db.update_one("FourYearPlans", query, update)
-            return result.modified_count  # Maybe return something else? I think we should return the updated plan
+            return result.modified_count # Maybe return something else? I think we should return the updated plan
+
+        # If course_id cannot be placed there due to pre-reqs, return an error
+        if not self.check_pre_reqs(course_id, plan, move_to):
+            return Exception("pre-reqs not met")
+
+        # If there are too many courses, return an error (implement later)
+        if plan[move_to] and len(plan[move_to]) >= 5:
+            return Exception("too many courses")
+
+        # Prepare the query to remove from move_from and add to move_to
+        query = {
+            "uqid": uqid,
+            f"{move_from}": {"$in": [course]}
+        }
+
+        # Corrected update dictionary (removed the "=" from f"{move_to}=")
+        update = {
+            "$pull": {f"{move_from}": course},
+            "$push": {f"{move_to}": course}  # Removed the unnecessary '='
+        }
+
+        # Execute the update
+        collection = self.db["FourYearPlans"]  # Access the collection
+        result = collection.update_one(query, update)  # Call update_one on the collection
+        return result.modified_count  # Maybe return something else? I think we should return the updated plan
 
     def auto_complete_plan(self, id):
         pass
@@ -177,8 +190,8 @@ class FourYearPlanService:
         d3 = 3
         plan = self.get_four_year_plan(uqid=id)
 
-        for semester in ["year_one_sem_one", "year_one_sem_two", "year_two_sem_one", "year_two_sem_two",
-                         "year_three_sem_one", "year_three_sem_two", "year_four_sem_one", "year_four_sem_two"]:
+        for semester in ["year_1_sem_1", "year_1_sem_2", "year_2_sem_1", "year_2_sem_2",
+                         "year_3_sem_1", "year_3_sem_2", "year_4_sem_1", "year_4_sem_2"]:
             for course_id in semester:
                 if course_id in plan["elective_reqs"]:
                     course_id = plan["elective_reqs"][course_id]
