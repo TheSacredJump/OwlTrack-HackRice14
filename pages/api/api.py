@@ -5,7 +5,7 @@ import os
 from TranscriptParser import extract_courses_from_pdf
 from bson import ObjectId
 import json
-
+from pymongo import MongoClient
 from pages.MongoDB.mongodb import MongoDB
 from pages.Services.initialize_services import initialize_services
 
@@ -15,6 +15,8 @@ CORS(app, supports_credentials=True,
      resources={r"/*": {"origins": "http://localhost:3000", "methods": ["POST", "OPTIONS"]}})
 UPLOAD_FOLDER = 'tmp'
 ALLOWED_EXTENSIONS = {'pdf'}
+client = MongoClient('mongodb+srv://sammy:HoustonRice@owltrack.sl1wi.mongodb.net/OwlTrack?retryWrites=true&w=majority')
+db = client["OwlTrack"]
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
