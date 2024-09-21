@@ -3,7 +3,12 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 from TranscriptParser import extract_courses_from_pdf
+from pymongo import MongoClient
+from bson import ObjectId  # Import ObjectId
 
+MONGO_URI = "mongodb+srv://sammy:HoustonRice@owltrack.sl1wi.mongodb.net/OwlTrack?retryWrites=true&w=majority"
+client = MongoClient(MONGO_URI)
+db = client["OwlTrack"]
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
@@ -48,6 +53,33 @@ def parse_transcript():
                 print(f"File removed: {filepath}")
     
     return jsonify({'error': 'Invalid file type'}), 400
+
+@app.route('/api/update_four_year_plan', methods=['POST'])
+def update_four_year_plan():
+    data = request.json
+    plan_id = data.get("plan_id")
+    semester = data.get("semester")
+    course_data = data.get("course_data")
+
+    if not plan_id or not semester or not course_data:
+        return jsonify({'error': 'Missing required data'}), 400
+
+    # Convert the string plan_id to an ObjectId
+    try:
+        plan_id = ObjectId(plan_id)
+    except Exception as e:
+        return jsonify({'error': 'Invalid plan_id format'}), 400
+
+    # Update the specific field in the FourYearPlans collection
+    result = db.FourYearPlans.update_one(
+        {"_id": plan_id},  # Use ObjectId instead of string
+        {"$push": {semester: course_data}}
+    )
+
+    if result.matched_count == 0:
+        return jsonify({'error': 'Plan not found'}), 404
+
+    return jsonify({'message': 'Plan updated successfully'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
