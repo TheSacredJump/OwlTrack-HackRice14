@@ -88,6 +88,65 @@ def update_four_year_plan():
     return jsonify({'message': 'Plan updated successfully'}), 200
 
 
+def create_four_year_plan(transcript_courses: list, userID : str):
+    """
+    Returns the OID of the course plan
+    [{'name': 'SCHOLARLY APPROACHES TO S&E', 'code': 'UNIV 105', 'hours': '2', 'grade': 'S', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'COMPUTATIONAL THINKING', 'code': 'COMP 140', 'hours': '4', 'grade': 'B', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'SINGLE VARIABLE CALCULUS I', 'code': 'MATH 101', 'hours': '3', 'grade': 'C+', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'INTRODUCTION TO PSYCHOLOGY', 'code': 'PSYC 101', 'hours': '3', 'grade': 'A', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'BIBLICAL ETHICS', 'code': 'RELI 120', 'hours': '3', 'grade': 'A-', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'SECOND YEAR SPANISH I', 'code': 'SPAN 263', 'hours': '3', 'grade': 'A', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'CTIS WORKSHOP', 'code': 'UNIV 194', 'hours': '0', 'grade': 'S', 'status': 'completed', 'semester': 'Y1S1'}, {'name': 'CDOD WORKSHOP', 'code': 'UNIV 195', 'hours': '0', 'grade': 'S', 'status': 'completed', 'semester': 'Y1S2'}, {'name': 'ALGORITHMIC THINKING', 'code': 'COMP 182', 'hours': '4', 'grade': 'P', 'status': 'completed', 'semester': 'Y1S2'}, {'name': 'NATURAL HISTORY OF TEXAS', 'code': 'FWIS 243', 'hours': '3', 'grade': 'A', 'status': 'completed', 'semester': 'Y1S2'}, {'name': 'SINGLE VARIABLE CALCULUS II', 'code': 'MATH 102', 'hours': '3', 'grade': 'C+', 'status': 'completed', 'semester': 'Y1S2'}, {'name': 'INTRO TO COGNITIVE PSYCHOLOGY', 'code': 'PSYC 203', 'hours': '3', 'grade': 'A+', 'status': 'completed', 'semester': 'Y1S2'}, {'name': 'SOCIAL PROBLEMS', 'code': 'SOCI 231', 'hours': '3', 'grade': 'B+', 'status': 'completed'}, {'name': 'INTRODUCTION TO PROGRAM DESIGN', 'code': 'COMP 215', 'hours': '4', 'grade': 'IP', 'status': 'in_progress', 'semester': 'Y2S1'}, {'name': 'INTRO TO COMPUTER ORGANIZATION', 'code': 'COMP 222', 'hours': '4', 'grade': 'IP', 'status': 'in_progress', 'semester': 'Y2S1'}, {'name': 'LINEAR ALGEBRA', 'code': 'MATH 355', 'hours': '3', 'grade': 'IP', 'status': 'in_progress', 'semester': 'Y2S1'}, {'name': 'STATISTICS FOR DATA SCIENCE', 'code': 'STAT 315', 'hours': '4', 'grade': 'IP', 'status': 'in_progress', 'semester': 'Y2S1'}]
+    """
+    default_comp_plan = {
+    "_id " : "",
+    "Name"  :"Four Year Plan 1",
+    "Major" : "Computer Science BS",
+    "Unassigned"  : ['Calculus 1', 'Calculus 2', 'Multivariable Calculus', 'Statistics', 'Linear Algebra', 'Advanced', 'Systems', 'Application Domains', 'Theory', 'Elective 1', 'Elective 2', 'COMP 140', 'COMP 182', 'COMP 215', 'COMP 222', 'COMP 301', 'COMP 312', 'COMP 318', 'COMP 321', 'COMP 382'],
+    "year_1_sem_1" : [],
+    "year_1_sem_2" : [],
+    "year_2_sem_1" : [],
+    "year_2_sem_2" : [],
+    "year_3_sem_1" : [],
+    "year_3_sem_2" : [],
+    "year_4_sem_1" : [],
+    "year_4_sem_2" : [],
+    "elective_reqs"  : {'Calculus 1': None, 'Calculus 2': None, 'Multivariable Calculus': None, 'Statistics': None, 'Linear Algebra': None, 'Core' : None, 'Advanced': None, 'Systems': None, 'Application Domains': None, 'Theory': None, 'Elective 1': None, 'Elective 2': None},
+    "other" : [],
+    "user_id" : ""
+    }
+    majorCollection = db['Majors'].find({"Full-Name": "Computer Science BS"})[0]
+    OFF_LIMITS = ["_id", "Full-Name"]
+    oid = ObjectId()
+    default_comp_plan["_id"] = oid
+    default_comp_plan["user_id"] = userID
+    for dataPoint in transcript_courses:
+        name = dataPoint["code"]
+        for key, value in majorCollection.items():
+            if key not in OFF_LIMITS:
+                # Meaning it is a course
+                major_course = False
+                if name in value["classes"] and name != "Elective":
+                    # Meaning the course is found in the required classes, we will subtract one from requirements. 
+                    value["reqs"] = value["reqs"] - 1
+                    if key in default_comp_plan["Unassigned"] or name in default_comp_plan['Unassigned']:
+                        if key in default_comp_plan["Unassigned"]:
+                            default_comp_plan["Unassigned"].remove(key)
+                        else:
+                            default_comp_plan["Unassigned"].remove(name)
+                        # print("Removed ", key, "from ", four_year_plan["Unassigned"])
+                    default_comp_plan["elective_reqs"][key] = name
+                    major_course = True
+                # This will append to the arrays regardless if the course is a requirement or not. 
+                if (key == "Elective" and major_course == False and name in value["classes"]):
+                    # Meaning we are looking in the electives, and the name is present in the classes of electives
+                    if default_comp_plan["elective_reqs"]["Elective 1"] == None:
+                        default_comp_plan["elective_reqs"]["Elective 1"] = name
+                    else:
+                        default_comp_plan["elective_reqs"]['Elective 2'] = name                
+                semester = dataPoint["semester"]
+                semester_key = "year_" + semester[1] + "_sem_" + semester[3]
+                if name not in default_comp_plan[semester_key]:
+                    default_comp_plan[semester_key].append(name)
+    FourYearPlans = db["FourYearPlans"]
+    FourYearPlans.insert_one(default_comp_plan)
+    return oid
+
 @app.route("/api/create-user", methods=['POST'])
 def create_user():
     major = request.form.get('major')
@@ -111,7 +170,9 @@ def create_user():
         'courses': courses,
         'major': major
     }
-
+    print(courses)
+    # Now we have to make the users 4 year plan. 
+    create_four_year_plan(courses, clerk_id)
     try:
         result = mongodb.insert_one("Users", user)
         return jsonify({'message': 'User created successfully'}), 201
@@ -137,7 +198,6 @@ def get_user_courses():
         }), 200
     except Exception as e:
         return jsonify({'error': f'Error fetching user courses: {str(e)}'}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)
