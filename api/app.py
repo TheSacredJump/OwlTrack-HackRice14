@@ -2,9 +2,9 @@
 import atexit
 
 from api.MongoDB.mongodb import MongoDB
-from api.Services.course_service import CourseService
-from api.Services.four_year_plan_service import FourYearPlanService
-from api.Services.major_service import MajorService
+from pages.Services.course_service import CourseService
+from pages.Services.four_year_plan_service import FourYearPlanService
+from pages.Services.major_service import MajorService
 
 
 def initialize_services():

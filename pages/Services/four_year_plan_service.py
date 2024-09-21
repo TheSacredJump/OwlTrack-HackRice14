@@ -1,7 +1,7 @@
 # four_year_plan_service.py
 from dataclasses import asdict
 
-from api.Objects.four_year_plan import new_four_year_plan
+from pages.Objects.four_year_plan import new_four_year_plan
 
 
 class FourYearPlanService:
@@ -65,16 +65,32 @@ class FourYearPlanService:
         """
         pass
 
-    def update_four_year_plan(self, uqid: str, course: str, move_to: str, move_from: str = None):
+    def find_position(self, plan: dict, course: str):
+        """
+        Find the current position of a course in a four-year plan.
+        :param plan: The four-year plan to search.
+        :param course: The course to find.
+        :return: The semester the course is in, else None.
+        """
+        for semester in plan:
+            # passes through non semesters
+            if semester in ["Name", "Major", "elective_reqs"]:
+                continue
+            if course in plan[semester]:
+                return semester
+        return None
+
+    def update_four_year_plan(self, uqid: str, course: str, move_to: str):
         """
         Update a four-year plan by moving a course between semesters.
         :param uqid: The unique identifier of the four-year plan.
         :param course: The course to move.
         :param move_to: The semester to move the course to.
-        :param move_from: The semester to move the course from.
         :return: The number of modified documents.
         """
         plan = self.get_four_year_plan(uqid)
+        move_from = self.find_position(plan, course)
+
         assert plan is not None, "Four-year plan not found"
         major = self.major_service.get_major_by_name(plan["Major"])
         assert major is not None, "Major not found"
@@ -102,9 +118,11 @@ class FourYearPlanService:
 
             # If course_id cannot be placed there due to pre-reqs, return an error
             if not self.check_pre_reqs(course_id, plan, move_to):
-                return -1
+                return Exception("pre-reqs not met")
 
             # If there are too many courses, return an error (implement later)
+            if plan[move_to] and len(plan[move_to]) >= 5:
+                return Exception("too many courses")
 
             # Prepare the query to remove from move_from and add to move_to
             query = {
@@ -127,7 +145,7 @@ class FourYearPlanService:
     def check_requirements(self, id):
         """
         Check if the requirements for a four-year plan are met.
-        :param id: 
+        :param id:
         :return:
         """
         pass
