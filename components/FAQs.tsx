@@ -36,7 +36,6 @@ const FAQs = () => {
         {faqs.map((faq, index) => (
           <div key={index} className='bg-navy px-4 flex flex-col border border-outline/50 rounded-lg  h-auto'>
             <div className='flex flex-row items-center space-x-2 mt-6'>
-              <FaQuestionCircle className='text-highlight text-2xl' />
               <h2 className='text-xl text-milk font-medium'>{faq.question}</h2>
             </div>
             <p className='text-subtext font-semibold mt-4 mb-6'>{faq.answer}</p>

@@ -6,6 +6,7 @@ import {
   IconBrandTabler,
   IconSettings,
   IconCalendar,
+  IconMessage,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { UserButton, useUser } from "@clerk/nextjs";
 import CourseCalendar from "@/components/CourseCalendar";
 import StudentCourses from "@/components/StudentCourses";
+import GPTCareerAdvisor from "@/components/GPTCareerAdvisor";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -29,6 +31,11 @@ export default function Dashboard() {
       label: "Scheduler",
       id: "scheduler",
       icon: <IconCalendar className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Chatbot",
+      id: "chatbot",
+      icon: <IconMessage className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
       label: "Settings",
@@ -54,6 +61,8 @@ export default function Dashboard() {
         return <StudentCourses />;
       case "scheduler":
         return <CourseCalendar />;
+      case "chatbot":
+        return <GPTCareerAdvisor />;
       case "settings":
         return <div className="p-4 bg-navy h-screen">Settings Component</div>;
       case "logout":

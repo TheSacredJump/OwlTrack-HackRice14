@@ -15,8 +15,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const uploadDir = path.join(process.cwd(), 'tmp');
+  
+  // Ensure the upload directory exists
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
   const form = new IncomingForm({
-    uploadDir: path.join(process.cwd(), 'tmp'),
+    uploadDir: uploadDir,
     keepExtensions: true,
   });
 
@@ -32,6 +39,12 @@ export default async function handler(req, res) {
     }
 
     console.log('File details:', file);
+    console.log('File path:', file.filepath);
+
+    if (!fs.existsSync(file.filepath)) {
+      console.error('File does not exist at path:', file.filepath);
+      return res.status(500).json({ error: 'File not found after upload' });
+    }
 
     try {
       const formData = new FormData();
@@ -52,25 +65,25 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error('Error processing transcript:', error);
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
         console.error('Error response data:', error.response.data);
         console.error('Error response status:', error.response.status);
         console.error('Error response headers:', error.response.headers);
       } else if (error.request) {
-        // The request was made but no response was received
         console.error('No response received:', error.request);
       } else {
-        // Something happened in setting up the request that triggered an Error
         console.error('Error message:', error.message);
       }
       res.status(500).json({ error: 'Failed to process transcript', details: error.message });
     } finally {
       // Clean up the uploaded file
-      fs.unlink(file.filepath, (unlinkErr) => {
-        if (unlinkErr) console.error('Error deleting file:', unlinkErr);
-        else console.log('File deleted successfully');
-      });
+      if (fs.existsSync(file.filepath)) {
+        fs.unlink(file.filepath, (unlinkErr) => {
+          if (unlinkErr) console.error('Error deleting file:', unlinkErr);
+          else console.log('File deleted successfully');
+        });
+      } else {
+        console.log('File not found for deletion');
+      }
     }
   });
 }
