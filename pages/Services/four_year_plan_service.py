@@ -64,6 +64,8 @@ class FourYearPlanService:
         :param place_in: The semester the course is being placed in.
         :return: True if prerequisites are met, else False.
         """
+        if place_in == "Unassigned":
+            return True
         course = self.course_service.get_course(course_id=course_id)
         assert course
 
@@ -72,9 +74,20 @@ class FourYearPlanService:
 
         for semester in ["year_one_sem_one", "year_one_sem_two", "year_two_sem_one", "year_two_sem_two",
                          "year_three_sem_one", "year_three_sem_two", "year_four_sem_one", "year_four_sem_two"]:
-            # if semester == nul
-            pass
-        pass
+            if semester == place_in or len(prereqs) == 0:
+                break
+            sem_courses = plan[semester]
+            # If sem_course is an elective, replace it with actual course
+            for sem_course in sem_courses:
+                if sem_course in plan["elective_reqs"]:
+                    sem_courses[sem_courses.index(sem_course)] = plan["elective_reqs"][sem_course]
+            # If course covers a prereq, remove prereq from list
+            for sem_course in sem_courses:
+                for prereq in prereqs:
+                    if sem_course in prereq:
+                        prereqs.remove(prereq)
+
+        return len(prereqs) == 0
 
     def find_position(self, plan: dict, course: str):
         """
@@ -107,8 +120,7 @@ class FourYearPlanService:
         assert major is not None, "Major not found"
 
         # if course is not a course_id (ie. it's a category, like Elective)
-        is_course_id = ''.join(filter(str.isdigit, course))
-        if not is_course_id:
+        if course in plan["elective_reqs"]:
             # If there is no selected inner course, update database and return
             course_id = plan["elective_reqs"][course]
             if not course_id:
@@ -159,4 +171,17 @@ class FourYearPlanService:
         :param id:
         :return:
         """
-        pass
+        hours = 120
+        d1 = 3
+        d2 = 3
+        d3 = 3
+        plan = self.get_four_year_plan(uqid=id)
+
+        for semester in ["year_one_sem_one", "year_one_sem_two", "year_two_sem_one", "year_two_sem_two",
+                         "year_three_sem_one", "year_three_sem_two", "year_four_sem_one", "year_four_sem_two"]:
+            for course_id in semester:
+                if course_id in plan["elective_reqs"]:
+                    course_id = plan["elective_reqs"][course_id]
+                if not course_id:
+                    continue
+
