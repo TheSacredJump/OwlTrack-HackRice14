@@ -18,6 +18,7 @@ import CourseCalendar from "@/components/CourseCalendar";
 import StudentCourses from "@/components/StudentCourses";
 import GPTCourseSuggester from "@/components/GPTCourseSuggester";
 import axios from "axios";
+import SettingsPage from "@/components/Settings";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -95,7 +96,7 @@ export default function Dashboard() {
       case "ai":
         return <GPTCourseSuggester />;
       case "settings":
-        return <div className="p-4 bg-navy h-screen">Settings Component</div>;
+        return <SettingsPage />;
       case "logout":
         // Handle logout logic here
         return null;

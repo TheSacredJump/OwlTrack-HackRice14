@@ -1,18 +1,10 @@
-'use client'; // This ensures the component is a Client Component in Next.js
+'use client';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useUser } from '@clerk/nextjs';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from '@nextui-org/react';
-
-// Dummy data for initial courses
-const initialCourses = [
-  { id: 1, name: 'Introduction to Computer Science', code: 'CS101', credits: 3 },
-  { id: 2, name: 'Calculus I', code: 'MATH101', credits: 4 },
-  { id: 3, name: 'English Composition', code: 'ENG101', credits: 3 },
-  // Add other courses...
-];
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure, Input } from '@nextui-org/react';
 
 // Drag-and-Drop item type
 const ItemTypes = {
@@ -21,44 +13,59 @@ const ItemTypes = {
 
 const CourseCalendar = () => {
   const [schedule, setSchedule] = useState(Array(8).fill().map(() => []));
-  const [availableCourses, setAvailableCourses] = useState(initialCourses);
   const [searchTerm, setSearchTerm] = useState('');
-  const [data, setData] = useState(null);  // Fetched schedule data
-  const [isLoading, setIsLoading] = useState(true);  // Loading state
-  const [error, setError] = useState(null);  // Error state
-  const [update, setUpdate] = useState(false);  // Trigger re-fetch on update
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [update, setUpdate] = useState(false);
   const { user } = useUser();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [currentCourse, setCurrentCourse] = useState(null)
-  const [currentCourseData, setCurrentCourseData] = useState(null)
+  
+  // States for course detail modal
+  const { isOpen: isDetailOpen, onOpen: onDetailOpen, onOpenChange: onDetailOpenChange } = useDisclosure();
+  const [currentCourse, setCurrentCourse] = useState(null);
+  const [currentCourseData, setCurrentCourseData] = useState(null);
 
-  // Fetch schedule data
+  // States for course search modal
+  const { isOpen: isSearchOpen, onOpen: onSearchOpen, onOpenChange: onSearchOpenChange } = useDisclosure();
+  const [allCourses, setAllCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [modalSearchTerm, setModalSearchTerm] = useState('');
+
   const fetchSchedule = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:5000/api/grab-schedule', {
-        params: { clerkID: user?.id },  // Send clerkID as query parameter
+        params: { clerkID: user?.id },
       });
-      setData(response.data);  // Set fetched data
-      setIsLoading(false);  // Mark loading as complete
+      setData(response.data);
+      setIsLoading(false);
     } catch (err) {
-      setError(err);  // Capture the error if any
-      setIsLoading(false);  // Mark loading as complete
+      setError(err);
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAllCourses = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:5000/api/get-every-course');
+      setAllCourses(response.data);
+      setFilteredCourses(response.data);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
     }
   };
 
   useEffect(() => {
-    fetchSchedule();  // Trigger fetch when component mounts
+    fetchSchedule();
+    fetchAllCourses();
   }, [update]);
 
-  // Memoized filtering of courses based on search term
-  const filteredCourses = useMemo(() => {
-    return availableCourses.filter(course =>
-      course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.code.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const filtered = allCourses.filter(course => 
+      course.toLowerCase().includes(modalSearchTerm.toLowerCase())
     );
-  }, [availableCourses, searchTerm]);
+    setFilteredCourses(filtered);
+  }, [modalSearchTerm, allCourses]);
 
-  // Add or move course between semesters
   const alterPlan = async (planID, courseName, targetSemester) => {
     try {
       const response = await axios.post('http://127.0.0.1:5000/api/update_four_year_plan', {
@@ -77,8 +84,17 @@ const CourseCalendar = () => {
     }
   };
 
-  // Component for draggable course (either from available courses or within a semester)
-  const Course = ({ course, currentSemester, width }: {course: any, currentSemester: any, width: any}) => {
+  const addCourseToUnassigned = async (course) => {
+    try {
+      await alterPlan(data["_id"], course, 'Unassigned');
+      onSearchOpenChange(false);
+      setModalSearchTerm('');
+    } catch (error) {
+      console.error('Error adding course:', error);
+    }
+  };
+
+  const Course = ({ course, currentSemester, width }) => {
     const [{ isDragging }, drag] = useDrag(() => ({
       type: ItemTypes.COURSE,
       item: { course, currentSemester },
@@ -100,8 +116,8 @@ const CourseCalendar = () => {
     const handleMouseUp = async () => {
       if (!isDraggingRef.current) {
         console.log(`Clicked on course: ${course}`);
-        setCurrentCourse(course)
-        var temp_dict = {
+        setCurrentCourse(course);
+        var courseInfo = {
           "_id": "66ef040303e99ec3c0645635",
           "credit-hours": "N/A",
           "crn": "21814",
@@ -113,26 +129,27 @@ const CourseCalendar = () => {
           "sem1": true,
           "sem2": true,
           "shorthand_name": course
-        }
+        };
+
         if (data && !Object.keys(data["elective_reqs"]).includes(course)) {
           try {
             const response = await axios.post('http://127.0.0.1:5000/api/get-additional-info', {
-              course: course  // This key should match what the Flask route is expecting
+              course: course
             });
             if (response.status === 200) {
-              temp_dict = response.data.msg
-              console.log('Fetched the additional info.', response.data.msg);
-              console.log(temp_dict)
+              courseInfo = response.data.msg;
+              console.log('Fetched the additional info:', courseInfo);
+              console.log(courseInfo)
             } else {
-              console.log('Failed to update plan:', response.data.msg);  // Use 'msg' from response
+              console.log('Failed to fetch course info:', response.data.msg);
             }
           } catch (error) {
-            console.error('Error updating plan:', error);
+            console.error('Error fetching course info:', error);
           }
         }
-        console.log("TEMP DICT:", temp_dict)
-        setCurrentCourseData(temp_dict)
-        onOpen();
+
+        setCurrentCourseData(courseInfo);
+        onDetailOpen();
       }
     };
 
@@ -150,7 +167,6 @@ const CourseCalendar = () => {
     );
   };
 
-  // Drop zone for semesters
   const Semester = ({ semesterKey, children }) => {
     const [{ isOver }, drop] = useDrop(() => ({
       accept: ItemTypes.COURSE,
@@ -162,7 +178,7 @@ const CourseCalendar = () => {
 
     const handleDrop = (course, currentSemester, targetSemester) => {
       if (currentSemester !== targetSemester) {
-        alterPlan(data["_id"], course, targetSemester);  // Move the course to the target semester
+        alterPlan(data["_id"], course, targetSemester);
       }
     };
 
@@ -177,7 +193,6 @@ const CourseCalendar = () => {
     );
   };
 
-  // Drop zone for the "Available Courses"
   const AvailableCoursesDrop = ({ children }) => {
     const [{ isOver }, drop] = useDrop(() => ({
       accept: ItemTypes.COURSE,
@@ -189,7 +204,7 @@ const CourseCalendar = () => {
 
     const handleDropBackToAvailable = (course, currentSemester) => {
       if (currentSemester !== 'Unassigned') {
-        alterPlan(data["_id"], course, 'Unassigned');  // Move the course back to "Unassigned"
+        alterPlan(data["_id"], course, 'Unassigned');
       }
     };
 
@@ -205,8 +220,8 @@ const CourseCalendar = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      {/* Modal functionality */}
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      {/* Course Detail Modal */}
+      <Modal isOpen={isDetailOpen} onOpenChange={onDetailOpenChange}>
         <ModalContent className="bg-black z-50">
           {(onClose) => (
             <>
@@ -214,18 +229,23 @@ const CourseCalendar = () => {
               <ModalBody>
                 <div className="flex flex-col space-y-4">
                   <h1>Course Name: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && currentCourseData["shorthand_name"]}</span></h1>
-                  <h1>Credit Hours:<span className='ml-2 text-gray-400 text-sm'>{currentCourseData && currentCourseData["credit-hours"]}</span></h1>
+                  <h1>Credit Hours: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && currentCourseData["credit-hours"]}</span></h1>
                   <h1>Distribution Credit: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && (currentCourseData["distribution"] ? currentCourseData["distribution"] : "N/A")}</span></h1>
-                  <h1>Semester: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && ( currentCourseData["sem1"] === true && currentCourseData["sem2"] === true ? ("Both") : (currentCourseData["sem1"] === true ? "Semester 1" : "Semester 2") )}</span></h1>                  
-                  <h1>Description: <span className='ml-2  text-gray-400 text-sm'>{currentCourseData && currentCourseData["description"]}</span></h1>                  
+                  <h1>Semester: <span className='ml-2 text-gray-400 text-sm'>
+                    {currentCourseData && (
+                      currentCourseData["sem1"] === true && currentCourseData["sem2"] === true
+                        ? "Both"
+                        : currentCourseData["sem1"] === true
+                          ? "Semester 1"
+                          : "Semester 2"
+                    )}
+                  </span></h1>
+                  <h1>Description: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && currentCourseData["description"]}</span></h1>
                 </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
                   Close
-                </Button>
-                <Button color="primary" onPress={onClose}>
-                  Action
                 </Button>
               </ModalFooter>
             </>
@@ -233,22 +253,78 @@ const CourseCalendar = () => {
         </ModalContent>
       </Modal>
 
-      {/* Background dimming overlay when modal is open */}
-      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-40 z-40"></div>}
+      {/* Course Search Modal */}
+      <Modal 
+        isOpen={isSearchOpen} 
+        onOpenChange={onSearchOpenChange} 
+        scrollBehavior="inside"
+        size="2xl"
+      >
+        <ModalContent className="bg-navy">
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Search Courses</ModalHeader>
+              <ModalBody>
+                <Input
+                  placeholder="Search courses..."
+                  value={modalSearchTerm}
+                  onChange={(e) => setModalSearchTerm(e.target.value)}
+                  className="mb-4"
+                />
+                <div className="space-y-2">
+                  {filteredCourses.map((course, index) => (
+                    <div 
+                      key={index}
+                      className="flex justify-between items-center p-2 bg-modal rounded"
+                    >
+                      <p className="font-bold">{course}</p>
+                      <Button 
+                        color="primary" 
+                        size="sm"
+                        onClick={() => addCourseToUnassigned(course)}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Background dimming overlay when any modal is open */}
+      {(isDetailOpen || isSearchOpen) && <div className="fixed inset-0 bg-black bg-opacity-40 z-40"></div>}
 
       {/* Course Calendar */}
-      <div className={`p-4 w-full bg-navy overflow-auto h-screen ${isOpen ? 'opacity-40 pointer-events-none' : ''}`}>
+      <div className={`p-4 w-full bg-navy overflow-auto h-screen ${isDetailOpen || isSearchOpen ? 'opacity-40 pointer-events-none' : ''}`}>
         <h1 className="text-2xl font-bold mb-4">Course Calendar</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Available Courses (Drop zone enabled) */}
           <AvailableCoursesDrop>
-            <input
-              type="text"
-              placeholder="Add course..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 mb-4 bg-navy border border-outline rounded"
-            />
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="Search saved courses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 mb-4 bg-navy border border-outline rounded"
+              />
+              <Button
+                auto
+                color="primary"
+                onClick={onSearchOpen}
+                className="mb-4"
+              >
+                Add Course
+              </Button>
+            </div>
             <h2 className="text-xl font-semibold mb-2">Saved Courses</h2>
             {data && data["Unassigned"].map(course => (
               <Course key={course} course={course} currentSemester="Unassigned" width={'full'} />

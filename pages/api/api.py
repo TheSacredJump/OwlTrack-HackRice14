@@ -243,6 +243,33 @@ def get_all_courses():
         return jsonify(courses), 200
     except Exception as e:
         return jsonify({'error': f'Error fetching courses: {str(e)}'}), 500
+    
+@app.route("/api/get-additional-info", methods=["POST"])
+def get_additional_info():
+    data = request.json
+    course_name = data.get("course", None)  # Ensure the key matches the request payload
+    courseCollection = db["Courses"]
+    x  = courseCollection.find_one({"shorthand_name" : course_name})
+    print(x, course_name)
+    if course_name:
+        return jsonify({"msg": x}), 200
+    else:
+        return jsonify({"msg": "Failure"}), 500
+    
+@app.route('/api/get-every-course', methods=['GET'])
+def get_every_course():
+    try:
+        collection = db["Courses"]
+        # Only fetch the shorthand_name field, excluding the _id field
+        courses = list(collection.find({}, {'_id': 0, 'shorthand_name': 1}))
+        
+        # Extract just the shorthand names into a list
+        shorthand_names = [course['shorthand_name'] for course in courses if 'shorthand_name' in course]
+        
+        print(shorthand_names)  # For debugging
+        return jsonify(shorthand_names), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/get-course', methods=['GET', 'POST'])
 def get_course():

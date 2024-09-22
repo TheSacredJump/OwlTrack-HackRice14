@@ -1,3 +1,4 @@
+import Contact from "@/components/Contact";
 import FAQs from "@/components/FAQs";
 import Features from "@/components/Features";
 import Footer from "@/components/Footer";
@@ -13,6 +14,7 @@ export default function Home() {
     <Features />
     <Macbook />
     <FAQs />
+    <Contact />
     <Footer />
     </>
   );

@@ -19,8 +19,8 @@ const Features = () => {
                     </div>
                     <h2 className='text-2xl text-milk font-medium'>your four year plan</h2>
                 </div>
-                <div className='border-x border-t border-outline bg-navy mt-5 h-full rounded-t-lg'>
-                    <Image src={'/owltrack_logo.png'} alt='logo' width={50} height={50} className='w-8 h-8' />
+                <div className='border-x border-t border-outline bg-navy mt-5 h-full rounded-t-lg overflow-hidden'>
+                    <Image src={'/schedule.png'} alt='logo' width={500} height={500} className='w-full h-full rounded-t-lg' />
                 </div>
             </div>
 
@@ -33,8 +33,8 @@ const Features = () => {
                     </div>
                     <h2 className='text-2xl text-milk font-medium'>tailored classes</h2>
                 </div>
-                <div className='border-x border-t border-outline bg-navy mt-5 h-full rounded-t-lg'>
-                    <Image src={'/owltrack_logo.png'} alt='logo' width={50} height={50} className='w-8 h-8' />
+                <div className='border-x border-t border-outline bg-navy mt-5 h-full rounded-t-lg overflow-hidden'>
+                    <Image src={'/chatbot.png'} alt='logo' width={500} height={500} className='w-full h-full rounded-t-lg' />
                 </div>
             </div>
 

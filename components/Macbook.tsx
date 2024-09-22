@@ -16,7 +16,7 @@ export default function Macbook() {
             <Badge className="h-10 w-10 transform -rotate-12" />
           </Link>
         }
-        src={`/linear.webp`}
+        src={`/schedule.png`}
         showGradient={false}
       />
     </div>
