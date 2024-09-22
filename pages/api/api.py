@@ -11,8 +11,7 @@ from pages.Services.initialize_services import initialize_services
 
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True,
-     resources={r"/*": {"origins": "http://localhost:3000", "methods": ["POST", "OPTIONS"]}})
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000", "allow_headers": ["Content-Type", "X-Clerk-User-Id"]}})
 UPLOAD_FOLDER = 'tmp'
 ALLOWED_EXTENSIONS = {'pdf'}
 client = MongoClient('mongodb+srv://sammy:HoustonRice@owltrack.sl1wi.mongodb.net/OwlTrack?retryWrites=true&w=majority')
