@@ -29,6 +29,8 @@ const CourseCalendar = () => {
   const [update, setUpdate] = useState(false);  // Trigger re-fetch on update
   const { user } = useUser();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [currentCourse, setCurrentCourse] = useState(null)
+  const [currentCourseData, setCurrentCourseData] = useState(null)
 
   // Fetch schedule data
   const fetchSchedule = async () => {
@@ -95,9 +97,41 @@ const CourseCalendar = () => {
       isDraggingRef.current = true;
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = async () => {
       if (!isDraggingRef.current) {
         console.log(`Clicked on course: ${course}`);
+        setCurrentCourse(course)
+        var temp_dict = {
+          "_id": "66ef040303e99ec3c0645635",
+          "credit-hours": "N/A",
+          "crn": "21814",
+          "description": "Filler course! Be thinking about what you should take here!",
+          "distribution": "N/A",
+          "full_name": course,
+          "href": "/courses/!SWKSCAT.cat?p_action=COURSE&p_term=202420&p_crn=21814",
+          "prereqs": null,
+          "sem1": true,
+          "sem2": true,
+          "shorthand_name": course
+        }
+        if (data && !Object.keys(data["elective_reqs"]).includes(course)) {
+          try {
+            const response = await axios.post('http://127.0.0.1:5000/api/get-additional-info', {
+              course: course  // This key should match what the Flask route is expecting
+            });
+            if (response.status === 200) {
+              temp_dict = response.data.msg
+              console.log('Fetched the additional info.', response.data.msg);
+              console.log(temp_dict)
+            } else {
+              console.log('Failed to update plan:', response.data.msg);  // Use 'msg' from response
+            }
+          } catch (error) {
+            console.error('Error updating plan:', error);
+          }
+        }
+        console.log("TEMP DICT:", temp_dict)
+        setCurrentCourseData(temp_dict)
         onOpen();
       }
     };
@@ -176,13 +210,15 @@ const CourseCalendar = () => {
         <ModalContent className="bg-black z-50">
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1 text-center">{currentCourseData && currentCourseData["full_name"]}</ModalHeader>
               <ModalBody>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Nullam pulvinar risus non risus hendrerit venenatis.
-                  Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                </p>
+                <div className="flex flex-col space-y-4">
+                  <h1>Course Name: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && currentCourseData["shorthand_name"]}</span></h1>
+                  <h1>Credit Hours:<span className='ml-2 text-gray-400 text-sm'>{currentCourseData && currentCourseData["credit-hours"]}</span></h1>
+                  <h1>Distribution Credit: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && (currentCourseData["distribution"] ? currentCourseData["distribution"] : "N/A")}</span></h1>
+                  <h1>Semester: <span className='ml-2 text-gray-400 text-sm'>{currentCourseData && ( currentCourseData["sem1"] === true && currentCourseData["sem2"] === true ? ("Both") : (currentCourseData["sem1"] === true ? "Semester 1" : "Semester 2") )}</span></h1>                  
+                  <h1>Description: <span className='ml-2  text-gray-400 text-sm'>{currentCourseData && currentCourseData["description"]}</span></h1>                  
+                </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
