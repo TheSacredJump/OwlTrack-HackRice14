@@ -154,16 +154,16 @@ const CourseCalendar = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Available Courses (Drop zone enabled) */}
           <AvailableCoursesDrop>
-            <h2 className="text-xl font-semibold mb-2">Available Courses</h2>
             <input
-              type="text"
-              placeholder="Search courses..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-2 mb-4 bg-navy border border-outline rounded"
+                type="text"
+                placeholder="Add course..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 mb-4 bg-navy border border-outline rounded"
             />
+            <h2 className="text-xl font-semibold mb-2">Saved Courses</h2>
             {data && data["Unassigned"].map(course => (
-              <Course key={course} course={course} currentSemester={"Unassigned"} />
+                <Course key={course} course={course} currentSemester={"Unassigned"}/>
             ))}
           </AvailableCoursesDrop>
 

@@ -125,7 +125,7 @@ def create_four_year_plan(transcript_courses: list, userID : str):
                 # Meaning it is a course
                 major_course = False
                 if name in value["classes"] and name != "Elective":
-                    # Meaning the course is found in the required classes, we will subtract one from requirements. 
+                    # Meaning the course is found in the required classes, we will subtract one from requirements.
                     value["reqs"] = value["reqs"] - 1
                     if key in default_comp_plan["Unassigned"] or name in default_comp_plan['Unassigned']:
                         if key in default_comp_plan["Unassigned"]:
@@ -135,13 +135,13 @@ def create_four_year_plan(transcript_courses: list, userID : str):
                         # print("Removed ", key, "from ", four_year_plan["Unassigned"])
                     default_comp_plan["elective_reqs"][key] = name
                     major_course = True
-                # This will append to the arrays regardless if the course is a requirement or not. 
+                # This will append to the arrays regardless if the course is a requirement or not.
                 if (key == "Elective" and major_course == False and name in value["classes"]):
                     # Meaning we are looking in the electives, and the name is present in the classes of electives
                     if default_comp_plan["elective_reqs"]["Elective 1"] == None:
                         default_comp_plan["elective_reqs"]["Elective 1"] = name
                     else:
-                        default_comp_plan["elective_reqs"]['Elective 2'] = name                
+                        default_comp_plan["elective_reqs"]['Elective 2'] = name
                 semester = dataPoint["semester"]
                 semester_key = "year_" + semester[1] + "_sem_" + semester[3]
                 if name not in default_comp_plan[semester_key]:
@@ -165,7 +165,7 @@ def create_user():
         courses = json.loads(courses)
     except json.JSONDecodeError:
         return jsonify({'message': 'Invalid courses data'}), 400
-    
+
     default_plan = create_four_year_plan(courses, clerk_id)
     user = {
         '_id': clerk_id,
@@ -176,7 +176,7 @@ def create_user():
         'default_plan' : default_plan
     }
     print(courses)
-    # Now we have to make the users 4 year plan. 
+    # Now we have to make the users 4 year plan.
     try:
         result = mongodb.insert_one("Users", user)
         return jsonify({'message': 'User created successfully'}), 201
@@ -198,7 +198,7 @@ def get_schedule():
             return jsonify({"error": "No schedule found for the specified user"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 
 @app.route('/api/get-user-courses', methods=['GET'])
 def get_user_courses():
@@ -232,7 +232,7 @@ def get_all_courses():
         return jsonify({'error': f'Error fetching courses: {str(e)}'}), 500
 
 @app.route('/api/get-course', methods=['GET', 'POST'])
-def get_all_courses():
+def get_course():
     data = request.json
     course_id = data.get("course_id", None)
     try:
