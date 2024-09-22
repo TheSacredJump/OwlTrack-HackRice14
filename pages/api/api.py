@@ -221,5 +221,26 @@ def get_user_courses():
         return jsonify({'error': f'Error fetching user courses: {str(e)}'}), 500
 
 
+@app.route('/api/get-all-courses', methods=['GET', 'POST'])
+def get_all_courses():
+    data = request.json
+    plan_id = data.get("plan_id", None)
+    try:
+        courses = course_service.get_all_courses(plan_id=plan_id)
+        return jsonify(courses), 200
+    except Exception as e:
+        return jsonify({'error': f'Error fetching courses: {str(e)}'}), 500
+
+@app.route('/api/get-course', methods=['GET', 'POST'])
+def get_all_courses():
+    data = request.json
+    course_id = data.get("course_id", None)
+    try:
+        courses = course_service.get_course(uqid=course_id)
+        return jsonify(courses), 200
+    except Exception as e:
+        return jsonify({'error': f'Error fetching courses: {str(e)}'}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
