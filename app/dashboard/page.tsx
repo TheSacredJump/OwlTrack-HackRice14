@@ -74,11 +74,6 @@ export default function Dashboard() {
       icon: <IconSparkles className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Course & Career Advisor",
-      id: "chatbot",
-      icon: <IconMessage className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
-    },
-    {
       label: "Settings",
       id: "settings",
       icon: <IconSettings className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
@@ -97,11 +92,7 @@ export default function Dashboard() {
         return <StudentCourses />;
       case "scheduler":
         return <CourseCalendar />
-      case "manager":
-        return <FourYearPlanManager />;
       case "ai":
-        return <div className="p-4 bg-navy h-screen">AI Suggestions</div>;
-      case "chatbot":
         return <GPTCourseSuggester />;
       case "settings":
         return <div className="p-4 bg-navy h-screen">Settings Component</div>;

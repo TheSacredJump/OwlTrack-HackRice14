@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaPaperPlane, FaSpinner } from 'react-icons/fa';
+import { IconSparkles } from '@tabler/icons-react';
 
 const GPTCourseSuggester = () => {
   const [messages, setMessages] = useState([]);
@@ -44,8 +45,12 @@ const GPTCourseSuggester = () => {
 
   return (
     <div className="flex flex-col h-screen w-full mx-auto bg-navy rounded-lg overflow-hidden">
-      <div className="bg-modal border-b border-outline/50 p-4">
+      <div className="bg-modal border-b border-outline/50 p-4 flex flex-row justify-between">
         <h2 className="text-2xl font-bold text-milk">AI Course Suggester and Academic/Career Chatbot</h2>
+        <button className='hover:scale-105 transition duration-300 flex flex-row items-center space-x-2 bg-gradient-to-r from-pink-500 to-indigo-500 px-1 rounded-lg'>
+          <IconSparkles />
+          <p className='font-medium text-sm'>Explore AI Suggestions</p>
+        </button>
       </div>
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (

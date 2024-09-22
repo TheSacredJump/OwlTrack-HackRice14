@@ -86,7 +86,7 @@ const CourseCalendar = () => {
     return (
       <div
         ref={drag}
-        className={`p-2 rounded text-left ${isDragging ? 'bg-gray-400' : 'bg-navy border border-outline/50'}`}
+        className={`p-2 rounded text-left max-h-14 ${isDragging ? 'bg-gray-400' : 'bg-navy border border-outline/50'}`}
         style={{ opacity: isDragging ? 0.5 : 1 }}
       >
         {course}
@@ -113,7 +113,7 @@ const CourseCalendar = () => {
     return (
       <div
         ref={drop}
-        className={`flex flex-wrap gap-2 p-4 border border-outline/50 rounded mr-2 ${isOver ? 'bg-gradient-to-r from-pink-500 to-indigo-500' : 'bg-navy'}`}
+        className={`flex flex-wrap h-full gap-2 p-4 border border-outline/50 rounded mr-2 ${isOver ? 'bg-gradient-to-r from-pink-500 to-indigo-500' : 'bg-navy'}`}
         style={{ minHeight: '100px' }}
       >
         {children}
@@ -170,7 +170,7 @@ const CourseCalendar = () => {
           {/* Schedule */}
           <div className="bg-modal border border-outline p-4 rounded shadow">
             <h2 className="text-xl font-semibold mb-4">Your Four Year Plan</h2>
-            <div className="grid grid-cols-2">
+            <div className="grid grid-cols-2 gap-8">
               {data && Object.keys(data).map((key, idx) => {
                 if (key.split("_")[0] === 'year') {
                   return (
