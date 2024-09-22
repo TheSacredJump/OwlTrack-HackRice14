@@ -1,12 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "../../components/ui/sidebar";
 import {
-  IconArrowLeft,
+  IconSparkles,
   IconBrandTabler,
   IconSettings,
   IconCalendar,
   IconMessage,
+  IconBolt,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -15,12 +16,46 @@ import { cn } from "@/lib/utils";
 import { UserButton, useUser } from "@clerk/nextjs";
 import CourseCalendar from "@/components/CourseCalendar";
 import StudentCourses from "@/components/StudentCourses";
-import GPTCareerAdvisor from "@/components/GPTCareerAdvisor";
 import GPTCourseSuggester from "@/components/GPTCourseSuggester";
+import axios from "axios";
 
 export default function Dashboard() {
   const { user } = useUser();
   const [currentView, setCurrentView] = useState("dashboard");
+  const [planData, setPlanData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const handleSave = async (planData) => {
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/api/update_four_year_plan', planData, {
+        headers: {
+          'X-Clerk-User-Id': 'user_2mOwGzdeLncbV0EBRBNdAKXtZhO'  // Replace with dynamic Clerk user ID
+        }
+      });
+      console.log('Plan saved successfully:', response.data);
+    } catch (error) {
+      console.error('Error saving plan:', error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/get_four_year_plan', {
+          headers: {
+            'X-Clerk-User-Id': 'user_2mOwGzdeLncbV0EBRBNdAKXtZhO'  // Replace with dynamic Clerk user ID
+          }
+        });
+        setPlanData(response.data);
+      } catch (error) {
+        console.error('Error fetching four-year plan:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlan();
+  }, []);
 
   const links = [
     {
@@ -34,7 +69,12 @@ export default function Dashboard() {
       icon: <IconCalendar className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
     {
-      label: "Course Suggester and Chatbot",
+      label: "AI Suggestions",
+      id: "ai",
+      icon: <IconSparkles className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
+    },
+    {
+      label: "Course & Career Advisor",
       id: "chatbot",
       icon: <IconMessage className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
@@ -42,11 +82,6 @@ export default function Dashboard() {
       label: "Settings",
       id: "settings",
       icon: <IconSettings className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
-    },
-    {
-      label: "Logout",
-      id: "logout",
-      icon: <IconArrowLeft className="text-neutral-200 h-5 w-5 flex-shrink-0" />,
     },
   ];
 
@@ -61,7 +96,11 @@ export default function Dashboard() {
       case "dashboard":
         return <StudentCourses />;
       case "scheduler":
-        return <CourseCalendar />;
+        return <CourseCalendar />
+      case "manager":
+        return <FourYearPlanManager />;
+      case "ai":
+        return <div className="p-4 bg-navy h-screen">AI Suggestions</div>;
       case "chatbot":
         return <GPTCourseSuggester />;
       case "settings":

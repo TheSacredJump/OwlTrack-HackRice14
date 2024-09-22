@@ -45,10 +45,10 @@ const Features = () => {
                         <PiShootingStarFill />
                         <p className='font-bold'>visualizes</p>
                     </div>
-                    <h2 className='text-2xl text-milk font-medium'>course statistics</h2>
+                    <h2 className='text-2xl text-milk font-medium'>graduation statistics</h2>
                 </div>
                 <div className='border-x border-t border-outline bg-navy mt-5 h-full rounded-t-lg'>
-                    <Image src={'/owltrack_logo.png'} alt='logo' width={50} height={50} className='w-8 h-8' />
+                    <Image src={'/analytics.png'} alt='logo' width={500} height={500} className='w-full h-full rounded-t-lg' />
                 </div>
             </div>
         </div>
