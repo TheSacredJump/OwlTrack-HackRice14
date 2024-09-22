@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="description"
+      content="Get started with Add-on development using React and TypeScript with Document Sandbox Runtime"
+    />
+    <meta name="keywords" content="Adobe, Express, Add-On, React, TypeScript, Document Sandbox Runtime" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Course To-Do List</title>
+  </head>
+  <body class="bg-gray-100">
+    <div class="max-w-lg mx-auto p-5">
+      <h1 class="text-2xl font-bold text-center mb-5">Course To-Do List</h1>
+
+      <div class="flex gap-2 mb-5">
+        <input id="courseInput" class="border border-gray-400 p-2 flex-grow rounded" placeholder="Enter course name" />
+        <button id="addCourseButton" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add Course</button>
+      </div>
+
+      <ul id="courseList" class="list-disc pl-5 mb-5">
+        <!-- Course items will be added here -->
+      </ul>
+
+      <button id="createPDF" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50" disabled>Generate PDF</button>
+    </div>
+
+    <script type="module">
+      const courseInput = document.getElementById('courseInput');
+      const addCourseButton = document.getElementById('addCourseButton');
+      const courseList = document.getElementById('courseList');
+      const createPDFButton = document.getElementById('createPDF');
+
+      let courses = [];
+
+      // Function to add a course to the list
+      function addCourse() {
+        const courseName = courseInput.value.trim();
+        if (courseName) {
+          // Add course to the courses array
+          courses.push(courseName);
+
+          // Create a new list item
+          const li = document.createElement('li');
+          li.textContent = courseName;
+          li.className = 'text-gray-700 my-1';
+
+          // Append the list item to the course list
+          courseList.appendChild(li);
+
+          // Clear the input field
+          courseInput.value = '';
+
+          // Enable the PDF button once a course is added
+          createPDFButton.disabled = false;
+        }
+      }
+
+      // Function to generate PDF from the course list
+      function generatePDF() {
+        if (courses.length === 0) return;
+
+        // Using a basic PDF library or custom logic for Adobe Express API
+        const pdfContent = courses.map((course, index) => `${index + 1}. ${course}`).join('\n');
+
+        // For simplicity, generating a Blob with text and making it downloadable
+        const blob = new Blob([pdfContent], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'course-list.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Event listener to add a course when the button is clicked
+      addCourseButton.addEventListener('click', addCourse);
+
+      // Allow pressing Enter to add course
+      courseInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addCourse();
+      });
+
+      // Event listener to generate the PDF when the button is clicked
+      createPDFButton.addEventListener('click', generatePDF);
+    </script>
+  </body>
+</html>

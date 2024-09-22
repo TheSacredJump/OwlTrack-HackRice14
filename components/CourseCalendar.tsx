@@ -19,7 +19,7 @@ const CourseCalendar = () => {
   const [error, setError] = useState(null);
   const [update, setUpdate] = useState(false);
   const { user } = useUser();
-  
+  console.log("DATA", data)
   // States for course detail modal
   const { isOpen: isDetailOpen, onOpen: onDetailOpen, onOpenChange: onDetailOpenChange } = useDisclosure();
   const [currentCourse, setCurrentCourse] = useState(null);
