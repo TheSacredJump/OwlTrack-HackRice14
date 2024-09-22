@@ -1,4 +1,8 @@
-import React, { useState, useMemo } from 'react';
+'use client'; // This ensures the component is a Client Component in Next.js
+import React, { useState, useMemo, useEffect } from 'react';
+import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
+import { useUser } from '@clerk/nextjs';
 
 // Dummy data for initial courses
 const initialCourses = [
@@ -17,7 +21,32 @@ const CourseCalendar = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [availableCourses, setAvailableCourses] = useState(initialCourses);
   const [searchTerm, setSearchTerm] = useState('');
+  const [data, setData] = useState(null);       // To store the fetched schedule data
+  const [isLoading, setIsLoading] = useState(true);  // To handle loading state
+  const [error, setError] = useState(null);     // To handle error state
+  const [update, setUpdate] = useState(false)
+  const { user } = useUser()
 
+  // Function to fetch the schedule data
+  const fetchSchedule = async () => {
+    try {
+      const response = await axios.get('http://127.0.0.1:5000/api/grab-schedule', {
+        params: { clerkID: user?.id }  // Send clerkID as query parameter
+      });
+      setData(response.data);  // Set the fetched data
+      setIsLoading(false);     // Mark loading as complete
+    } catch (err) {
+      setError(err);           // Capture the error if any
+      setIsLoading(false);     // Mark loading as complete, even in case of error
+    }
+  };
+
+  // useEffect to fetch data when component mounts
+  useEffect(() => {
+    fetchSchedule();  // Trigger the fetch when the component is mounted
+  }, [update]); 
+
+  console.log("DATA: ", data)
   const filteredCourses = useMemo(() => {
     return availableCourses.filter(course => 
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -25,79 +54,53 @@ const CourseCalendar = () => {
     );
   }, [availableCourses, searchTerm]);
 
-  const addCourseToSchedule = async (semesterIndex) => {
-    const sem = ((semesterIndex + 1) % 2) == 0 ? 2 : 1;
-    const year = Math.ceil((semesterIndex + 1) / 2);
-    if (selectedCourse) {
-      // Update the local state for the schedule
-      setSchedule(prevSchedule => {
-        const newSchedule = [...prevSchedule];
-        newSchedule[semesterIndex] = [...newSchedule[semesterIndex], selectedCourse];
-        return newSchedule;
-      });
-  
-      // Remove the selected course from the available courses
-      setAvailableCourses(prevCourses =>
-        prevCourses.filter(course => course.id !== selectedCourse.id)
-      );
-  
-      // Prepare the course data to send to the backend
-      const courseData = {
-        id: selectedCourse.id,
-        name: selectedCourse.name,
-        code: selectedCourse.code,
-        credits: selectedCourse.credits
-      };
-  
-      try {
-        const response = await fetch('http://127.0.0.1:5000//api/update_four_year_plan', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          credentials: 'include',  // Include credentials if you're using sessions
-          body: JSON.stringify({
-            plan_id: "66eef6c9049650cc0a8c535a",  // Update with your actual plan ID
-            semester: `year_${year}_sem_${sem}`,  // Adjust the field name accordingly
-            course_data: courseData
-          }),
-        });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-  
-        const data = await response.json();
-        console.log('Backend response:', data);
-      } catch (error) {
-        console.error('Error updating plan:', error);
-      }
-  
-      // Clear the selected course
-      setSelectedCourse(null);
+  const addCourseToSchedule = async (key : String) => {
+    if (selectedCourse && data) {
+      // Update the local state for the schedul
+      alterPlan(data["_id"], selectedCourse, key)
+      setSelectedCourse(null)
     }
   };
   
   
 
-  const removeCourseFromSchedule = (semesterIndex, courseId) => {
-    setSchedule(prevSchedule => {
-      const newSchedule = [...prevSchedule];
-      const removedCourse = newSchedule[semesterIndex].find(course => course.id === courseId);
-      newSchedule[semesterIndex] = newSchedule[semesterIndex].filter(course => course.id !== courseId);
-      
-      setAvailableCourses(prevCourses => {
-        // Check if the course already exists in availableCourses
-        if (!prevCourses.some(course => course.id === removedCourse.id)) {
-          return [...prevCourses, removedCourse];
+
+  const alterPlan = async (planID, courseName, semester) => {
+    try {
+        // Send POST request to Flask API with required data
+        const response = await axios.post('http://127.0.0.1:5000/api/update_four_year_plan', {
+            plan_id: planID,
+            course_name: courseName,
+            semester: semester,
+        });
+
+        // Handle the response
+        if (response.status === 200) {
+            console.log('Plan updated successfully');
+            setUpdate(!update)
+        } else {
+            console.log('Failed to update plan:', response.data.error);
         }
-        return prevCourses;
-      });
+    } catch (error) {
+        console.error('Error updating plan:', error);
+    }
+};    
+    // setSchedule(prevSchedule => {
+    //   const newSchedule = [...prevSchedule];
+    //   const removedCourse = newSchedule[semesterIndex].find(course => course.id === courseId);
+    //   newSchedule[semesterIndex] = newSchedule[semesterIndex].filter(course => course.id !== courseId);
       
-      return newSchedule;
-    });
-  };
+    //   setAvailableCourses(prevCourses => {
+    //     // Check if the course already exists in availableCourses
+    //     if (!prevCourses.some(course => course.id === removedCourse.id)) {
+    //       return [...prevCourses, removedCourse];
+    //     }
+    //     return prevCourses;
+    //   });
+      
+    //   return newSchedule;
+    // });
+  // };
 
   return (
     <div className="p-4 w-full bg-navy overflow-auto h-screen">
@@ -113,17 +116,17 @@ const CourseCalendar = () => {
             className="w-full p-2 mb-4 bg-navy border border-outline rounded"
           />
           <div className="grid grid-cols-1 gap-2">
-            {filteredCourses.map(course => (
+            {data && data["Unassigned"].map(course => (
               <button
-                key={course.id}
+                key={course}
                 className={`p-2 rounded text-left ${
-                  selectedCourse && selectedCourse.id === course.id
+                  selectedCourse === course
                     ? 'bg-emerald-500 text-white'
                     : 'bg-navy border border-outline/50 hover:bg-gradient-to-r hover:from-pink-500 hover:to-violet-500'
                 }`}
-                onClick={() => setSelectedCourse(course)}
+                onClick={() => {setSelectedCourse(course)}}
               >
-                {course.code} - {course.name}
+                {course}
               </button>
             ))}
           </div>
@@ -131,8 +134,50 @@ const CourseCalendar = () => {
         <div className="bg-modal border border-outline p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Your Four Year Plan</h2>
           <div className='grid grid-cols-2'>
-          {schedule.map((semester, index) => (
-            <div key={index} className="mb-4">
+          {data && Object.keys(data).map((key, idx) => {
+            if (key.split("_")[0] === 'year') {
+              return (
+                <div key={idx} className="mb-4">
+                  <h3 className="font-semibold">
+                    Year {key.split("_")[1]} {idx % 2 == 0 ? 'Fall' : 'Spring'} Semester
+                  </h3>
+                  <div className="flex flex-wrap gap-2 mt-2 px-4">
+                    {data[key].map((course, sub_idx) => (
+                      <div key={sub_idx} className="bg-navy border border-outline p-2 rounded flex items-center">
+                        <span>{course}</span>
+                        <button
+                          className="ml-2 text-red-500 hover:text-red-700"
+                          onClick={() => alterPlan(data["_id"], course, "Unassigned")}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      className="bg-emerald-500 text-white px-2 rounded-full hover:bg-emerald-600"
+                      onClick={() => addCourseToSchedule(key)}
+                      disabled={!selectedCourse}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+            return null; // Return null if the condition is not met to avoid undefined
+          })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CourseCalendar;
+
+
+/*
+<div key={index} className="mb-4">
               <h3 className="font-semibold">Year {Math.floor(index / 2) + 1}, {(index % 2) == 0 ? 'Fall' : 'Spring'} Semester</h3>
               <div className="flex flex-wrap gap-2 mt-2 px-4">
                 {semester.map(course => (
@@ -155,12 +200,5 @@ const CourseCalendar = () => {
                 </button>
               </div>
             </div>
-          ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
-export default CourseCalendar;
+*/

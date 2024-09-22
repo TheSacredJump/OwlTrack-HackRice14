@@ -107,7 +107,7 @@ class FourYearPlanService:
         :param course: The course to find.
         :return: The semester the course is in, else None.
         """
-        for semester in ["year_1_sem_1", "year_1_sem_2", "year_2_sem_1", "year_2_sem_2",
+        for semester in ["Unassigned","year_1_sem_1", "year_1_sem_2", "year_2_sem_1", "year_2_sem_2",
                          "year_3_sem_1", "year_3_sem_2", "year_4_sem_1", "year_4_sem_2"]:
             if course in plan[semester]:
                 return semester
@@ -123,6 +123,7 @@ class FourYearPlanService:
         """
         plan = self.get_four_year_plan(uqid)
         move_from = self.find_position(plan, course)
+        print("look here:::::", move_from)
 
         assert plan is not None, "Four-year plan not found"
         major = self.major_service.get_major_by_name(plan["Major"])
@@ -137,31 +138,32 @@ class FourYearPlanService:
         if not course_id:
             # Prepare the query to remove from move_from and add to move_to
             query = {
-                "uqid": uqid,
-                f"{move_from}": {"$in": [course]}
+                "_id": uqid,
             }
 
+            # Corrected update dictionary (removed the "=" from f"{move_to}=")
             update = {
                 "$pull": {f"{move_from}": course},
-                "$push": {f"{move_to}=": course}
+                "$push": {f"{move_to}": course}  # Removed the unnecessary '='
             }
 
+
             # Execute the update
-            result = self.db.update_one("FourYearPlans", query, update)
-            return result.modified_count # Maybe return something else? I think we should return the updated plan
+            collection = self.db["FourYearPlans"]  # Access the collection
+            result = collection.update_one(query, update)  # Call update_one on the collection
+            return result  # Maybe return something else? I think we should return the updated plan
 
         # If course_id cannot be placed there due to pre-reqs, return an error
         if not self.check_pre_reqs(course_id, plan, move_to):
             return Exception("pre-reqs not met")
 
         # If there are too many courses, return an error (implement later)
-        if plan[move_to] and len(plan[move_to]) >= 5:
-            return Exception("too many courses")
+        # if plan[move_to] and len(plan[move_to]) >= 5:
+        #     return Exception("too many courses")
 
         # Prepare the query to remove from move_from and add to move_to
         query = {
-            "uqid": uqid,
-            f"{move_from}": {"$in": [course]}
+            "_id": uqid,
         }
 
         # Corrected update dictionary (removed the "=" from f"{move_to}=")
@@ -170,10 +172,11 @@ class FourYearPlanService:
             "$push": {f"{move_to}": course}  # Removed the unnecessary '='
         }
 
+
         # Execute the update
         collection = self.db["FourYearPlans"]  # Access the collection
         result = collection.update_one(query, update)  # Call update_one on the collection
-        return result.modified_count  # Maybe return something else? I think we should return the updated plan
+        return result  # Maybe return something else? I think we should return the updated plan
 
     def auto_complete_plan(self, id):
         pass

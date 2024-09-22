@@ -67,14 +67,15 @@ def parse_transcript():
     return jsonify({'error': 'Invalid file type'}), 400
 
 
-@app.route('/api/update_four_year_plan', methods=['POST'])
+@app.route('/api/update_four_year_plan', methods=['POST', "GET"])
 def update_four_year_plan():
     data = request.json
     plan_id = data.get("plan_id", None)
     move_to = data.get("semester", None)
-    course_data = data.get("course_data", None)
+    course_name = data.get("course_name", None)
+    # course_data = data.get("course_data", None)
 
-    if not plan_id or not move_to or not course_data:
+    if not plan_id or not move_to or not course_name:
         return jsonify({'error': 'Missing required data'}), 400
 
     try:
@@ -82,7 +83,8 @@ def update_four_year_plan():
     except Exception as e:
         return jsonify({'error': 'Invalid plan_id format'}), 400
 
-    result = four_year_plan_service.update_four_year_plan(uqid=plan_id, course=course_data, move_to=move_to)
+    result = four_year_plan_service.update_four_year_plan(uqid=plan_id, course=course_name, move_to=move_to)
+    print("RESULT::", result)
 
     if result.matched_count == 0:
         return jsonify({'error': 'Plan not found'}), 404
@@ -147,7 +149,7 @@ def create_four_year_plan(transcript_courses: list, userID : str):
                     default_comp_plan[semester_key].append(name)
     FourYearPlans = db["FourYearPlans"]
     FourYearPlans.insert_one(default_comp_plan)
-    return oid
+    return default_comp_plan
 
 @app.route("/api/create-user", methods=['POST'])
 def create_user():
@@ -164,22 +166,40 @@ def create_user():
         courses = json.loads(courses)
     except json.JSONDecodeError:
         return jsonify({'message': 'Invalid courses data'}), 400
-
+    
+    default_plan = create_four_year_plan(courses, clerk_id)
     user = {
         '_id': clerk_id,
         'username': username,
         'standing': standing,
         'courses': courses,
-        'major': major
+        'major': major,
+        'default_plan' : default_plan
     }
     print(courses)
     # Now we have to make the users 4 year plan. 
-    create_four_year_plan(courses, clerk_id)
     try:
         result = mongodb.insert_one("Users", user)
         return jsonify({'message': 'User created successfully'}), 201
     except Exception as e:
         return jsonify({'message': 'User creation failed', 'error': str(e)}), 400
+
+@app.route("/api/grab-schedule", methods=["GET"])
+def get_schedule():
+    # Connect to the "FourYearPlans" collection
+    collection = db['FourYearPlans']
+    clerkID = request.args.get("clerkID", None)  # Use request.args to access query parameters
+    print(clerkID)
+    try:
+        first_schedule = collection.find_one({"user_id": clerkID})
+        if first_schedule:
+            first_schedule['_id'] = str(first_schedule['_id'])
+            return jsonify(first_schedule), 200  # Return the document as a JSON response
+        else:
+            return jsonify({"error": "No schedule found for the specified user"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 @app.route('/api/get-user-courses', methods=['GET'])
 def get_user_courses():
@@ -200,6 +220,7 @@ def get_user_courses():
         }), 200
     except Exception as e:
         return jsonify({'error': f'Error fetching user courses: {str(e)}'}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

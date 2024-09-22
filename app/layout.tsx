@@ -33,13 +33,13 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} ${ibm.className} bg-navy text-milk antialiased`}
-        >
-          {children}
-        </body>
-      </html>
+          <html lang="en">
+            <body
+              className={`${geistSans.variable} ${geistMono.variable} ${ibm.className} bg-navy text-milk antialiased`}
+            >
+              {children}
+            </body>
+          </html>
     </ClerkProvider>
   );
 }
