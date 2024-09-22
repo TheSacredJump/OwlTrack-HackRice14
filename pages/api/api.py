@@ -8,11 +8,11 @@ import json
 from pymongo import MongoClient
 from pages.MongoDB.mongodb import MongoDB
 from pages.Services.initialize_services import initialize_services
-from recommend import recommend_courses
+from recommend import recommend_courses_prediction
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000", "allow_headers": ["Content-Type", "X-Clerk-User-Id"]}})
+CORS(app)
 UPLOAD_FOLDER = 'tmp'
 ALLOWED_EXTENSIONS = {'pdf'}
 client = MongoClient('mongodb+srv://sammy:HoustonRice@owltrack.sl1wi.mongodb.net/OwlTrack?retryWrites=true&w=majority')
@@ -66,18 +66,27 @@ def parse_transcript():
 
     return jsonify({'error': 'Invalid file type'}), 400
 
-@app.route('/recommend-courses', methods=['POST'])
+@app.route('/recommend-courses', methods=['GET'])
 def recommend_courses():
     otherCoursesPath = "/Users/anthonytang/Downloads/Final_Combined_Courses_Data.csv"
-    riceCoursesPath = "/Users/anthonytang/Downloads/OwlTrack_Updated_Courses.csv"
-
+    riceCoursesPath = "/Users/anthonytang/Downloads/OwlTrack_Updated_Courses_Modified.csv"
     try:
-        otherCourses = recommend_courses(otherCoursesPath)
-        riceCourses = recommend_courses(riceCoursesPath)
-        return otherCourses, riceCourses
+        # Get the recommended courses
+        otherCourses = recommend_courses_prediction(otherCoursesPath)
+        riceCourses = recommend_courses_prediction(riceCoursesPath)
+
+        # Ensure the data is converted to proper JSON
+        response = {
+            'otherCourses': json.loads(otherCourses),  # Load the JSON if necessary
+            'riceCourses': json.loads(riceCourses)     # Load the JSON if necessary
+        }
+
+        print(response)  # Log the response for debugging
+        return jsonify({"msg": response}), 200  # Return the response with a 200 OK status
     except Exception as e:
         print(f"Error processing data: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'msg': str(e)}), 500  # Return a 500 error if something goes wrong
+
 
 @app.route('/api/update_four_year_plan', methods=['POST', "GET"])
 def update_four_year_plan():
