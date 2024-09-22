@@ -1,9 +1,10 @@
 'use client'; // This ensures the component is a Client Component in Next.js
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useUser } from '@clerk/nextjs';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from '@nextui-org/react';
 
 // Dummy data for initial courses
 const initialCourses = [
@@ -27,6 +28,7 @@ const CourseCalendar = () => {
   const [error, setError] = useState(null);  // Error state
   const [update, setUpdate] = useState(false);  // Trigger re-fetch on update
   const { user } = useUser();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // Fetch schedule data
   const fetchSchedule = async () => {
@@ -74,7 +76,7 @@ const CourseCalendar = () => {
   };
 
   // Component for draggable course (either from available courses or within a semester)
-  const Course = ({ course, currentSemester }) => {
+  const Course = ({ course, currentSemester, width }: {course: any, currentSemester: any, width: any}) => {
     const [{ isDragging }, drag] = useDrag(() => ({
       type: ItemTypes.COURSE,
       item: { course, currentSemester },
@@ -83,10 +85,30 @@ const CourseCalendar = () => {
       }),
     }));
 
+    const isDraggingRef = useRef(false);
+
+    const handleMouseDown = () => {
+      isDraggingRef.current = false;
+    };
+
+    const handleDragStart = () => {
+      isDraggingRef.current = true;
+    };
+
+    const handleMouseUp = () => {
+      if (!isDraggingRef.current) {
+        console.log(`Clicked on course: ${course}`);
+        onOpen();
+      }
+    };
+
     return (
       <div
         ref={drag}
-        className={`p-2 rounded text-left max-h-14 ${isDragging ? 'bg-gray-400' : 'bg-navy border border-outline/50'}`}
+        onMouseDown={handleMouseDown}
+        onDragStart={handleDragStart}
+        onMouseUp={handleMouseUp}
+        className={`p-2 rounded text-left ${width === 'full' ? 'w-full' : '' } max-h-14 ${isDragging ? 'bg-gray-400' : 'bg-navy border border-outline/50'}`}
         style={{ opacity: isDragging ? 0.5 : 1 }}
       >
         {course}
@@ -140,7 +162,7 @@ const CourseCalendar = () => {
     return (
       <div
         ref={drop}
-        className={`grid grid-cols-1 gap-2 p-4 ${isOver ? 'bg-highlight' : 'bg-modal border border-outline'} rounded shadow`}
+        className={`flex flex-col gap-2 p-4 ${isOver ? 'bg-highlight' : 'bg-modal border border-outline'} rounded shadow`}
       >
         {children}
       </div>
@@ -149,21 +171,51 @@ const CourseCalendar = () => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="p-4 w-full bg-navy overflow-auto h-screen">
+      {/* Modal functionality */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent className="bg-black z-50">
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
+              <ModalBody>
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                  Nullam pulvinar risus non risus hendrerit venenatis.
+                  Pellentesque sit amet hendrerit risus, sed porttitor quam.
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Close
+                </Button>
+                <Button color="primary" onPress={onClose}>
+                  Action
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Background dimming overlay when modal is open */}
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-40 z-40"></div>}
+
+      {/* Course Calendar */}
+      <div className={`p-4 w-full bg-navy overflow-auto h-screen ${isOpen ? 'opacity-40 pointer-events-none' : ''}`}>
         <h1 className="text-2xl font-bold mb-4">Course Calendar</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Available Courses (Drop zone enabled) */}
           <AvailableCoursesDrop>
             <input
-                type="text"
-                placeholder="Add course..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 mb-4 bg-navy border border-outline rounded"
+              type="text"
+              placeholder="Add course..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-2 mb-4 bg-navy border border-outline rounded"
             />
             <h2 className="text-xl font-semibold mb-2">Saved Courses</h2>
             {data && data["Unassigned"].map(course => (
-                <Course key={course} course={course} currentSemester={"Unassigned"}/>
+              <Course key={course} course={course} currentSemester="Unassigned" width={'full'} />
             ))}
           </AvailableCoursesDrop>
 
@@ -178,9 +230,7 @@ const CourseCalendar = () => {
                       <h3 className="font-semibold">
                         Year {key.split("_")[1]} {idx % 2 === 0 ? 'Fall' : 'Spring'} Semester
                       </h3>
-                      <Semester
-                        semesterKey={key}
-                      >
+                      <Semester semesterKey={key}>
                         {data[key].map((course, sub_idx) => (
                           <Course key={sub_idx} course={course} currentSemester={key} />
                         ))}

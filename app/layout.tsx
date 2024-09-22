@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import { IBM_Plex_Sans } from '@next/font/google'
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import {NextUIProvider} from "@nextui-org/react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,8 +37,10 @@ export default function RootLayout({
           <html lang="en">
             <body
               className={`${geistSans.variable} ${geistMono.variable} ${ibm.className} bg-navy text-milk antialiased`}
-            >
+              >
+              <NextUIProvider>
               {children}
+            </NextUIProvider>
             </body>
           </html>
     </ClerkProvider>
