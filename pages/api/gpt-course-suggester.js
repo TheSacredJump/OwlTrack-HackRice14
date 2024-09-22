@@ -44,7 +44,7 @@ export default async function handler(req, res) {
     
           ${formattedCourses}
     
-          A student just asked: "${message}". Based on the course names, suggest the most relevant course(s) for the student.
+          A student just asked: "${message}". Based on the course names, suggest the most relevant course(s) for the student. 
           `;
     
           // Call OpenAI's chat API with the course-related prompt

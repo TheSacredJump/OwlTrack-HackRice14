@@ -8,6 +8,7 @@ import json
 from pymongo import MongoClient
 from pages.MongoDB.mongodb import MongoDB
 from pages.Services.initialize_services import initialize_services
+from recommend import recommend_courses
 
 
 app = Flask(__name__)
@@ -65,6 +66,18 @@ def parse_transcript():
 
     return jsonify({'error': 'Invalid file type'}), 400
 
+@app.route('/recommend-courses', methods=['POST'])
+def recommend_courses():
+    otherCoursesPath = "/Users/anthonytang/Downloads/Final_Combined_Courses_Data.csv"
+    riceCoursesPath = "/Users/anthonytang/Downloads/OwlTrack_Updated_Courses.csv"
+
+    try:
+        otherCourses = recommend_courses(otherCoursesPath)
+        riceCourses = recommend_courses(riceCoursesPath)
+        return otherCourses, riceCourses
+    except Exception as e:
+        print(f"Error processing data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/update_four_year_plan', methods=['POST', "GET"])
 def update_four_year_plan():
